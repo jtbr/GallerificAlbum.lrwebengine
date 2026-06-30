@@ -36,7 +36,7 @@ echo "Syncing templates from $HG_TEMPLATES (hg $TPL_ID)"
 #    authoring-only JustStrings companions, background source art, and hg cruft.
 rsync -a --delete \
   --exclude='.hg/' --exclude='.hgignore' --exclude='.hgtags' \
-  --exclude='backup/' --exclude='*.orig' --exclude='TODO.txt' \
+  --exclude='backup/' --exclude='*.orig' --exclude='TODO.txt' --exclude='CLAUDE.md' \
   --exclude='README.html' --exclude='readme.md' --exclude='license.txt' \
   --exclude='JustStrings*' \
   --exclude='res/deploy_images.sh' --exclude='res/deploy_panoramas.txt' \
