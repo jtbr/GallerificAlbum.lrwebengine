@@ -1,0 +1,39 @@
+--[[
+
+manifest.lrweb
+
+Lightroom Web Gallery manifest.  This file maps various template files to actual
+files to be produced for your website.
+
+--
+
+The Gallerific Lightroom Web Gallery
+
+Copyright (c) 2015-2016 Justin Briggs (http://trialstravails.blogspot.com)
+
+Licensed under the MIT License:
+   http://www.opensource.org/licenses/mit-license.php
+
+]]
+
+importTags( "lr", "com.adobe.lightroom.default" ) -- main lightroom tags including Pagination.
+
+-- create a web page for all images based upon grid.html (written to index.html), with all images
+AddGridPages {
+	template="grid.html",
+	rows=model.nonCSS.numRows,
+	columns=model.nonCSS.numCols,
+}
+-- Include custom stylesheet
+AddCustomCSS{
+	filename="res/css/custom.css",
+}
+-- include images and javascript resources
+AddResources {
+	source='res',
+	destination='res',
+}
+IdentityPlate {
+	destination='im/logo.png',
+	enabledBinding = [[appearance.logo.display]],
+}

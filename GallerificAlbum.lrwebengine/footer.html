@@ -1,0 +1,623 @@
+<% --[[
+The Gallerific Lightroom Web Gallery
+
+Copyright (c) 2015-2016 Justin Briggs (http://trialstravails.blogspot.com)
+
+Licensed under the MIT License:
+   http://www.opensource.org/licenses/mit-license.php
+ ]]
+%>
+		<div id="footer" class="pagewidth group">
+			<div class="social"></div>
+<% if mode ~= 'preview' and contactUrl ~= '' then %>
+			<a href="$contactUrl"> <span
+<% else %>
+			<span onclick="clickTarget( this, 'metadata.contactInfo.value' );" style="text-decoration: underline;"
+<% end %>
+ class="textColor contact $model.nonCSS.contact.class" id="metadata.contactInfo.value"><%= model.metadata.contactInfo.value %></span>
+<% if mode ~= 'preview' and contactUrl ~= '' then %>
+			</a>
+<% end %>
+<% if not model.nonCSS.logoPosition.above and (mode == 'preview' or model.appearance.logo.display) then %>
+			<div class="logo $model.nonCSS.logoPosition.class" style="padding-bottom: 8px;"><a href="$homeUrl">
+				<img width="<%= getIdentityPlateSize().width %>" height="<%= getIdentityPlateSize().height %>" src="$imgDir/logo.png" alt="Logo">
+			</a></div>
+<% end %>
+		</div>
+<% if model.nonCSS.showDownloadAll or (model.nonCSS.showSocial and model.nonCSS.showFBLike) then %>
+		<div id="popupOverlay"><div class="popup"><h2></h2><div class="close icon ic-times-bl"></div>
+			<div class="popupContent" ></div>
+		</div></div>
+<% end %>
+
+<script type="text/javascript"> <!--
+// Called when all scripts have loaded:
+<% if mode == 'preview' then %>
+jQuery(document).ready(function($) {
+
+<% else %>
+fallback.ready(function() {
+	if (navigator.userAgent.match(/Opera Mini/i)) {
+		// Opera mini runs javascript on server; instead mimic no-javascript mode
+		$('html').addClass('noCenterCrop');
+		$("img.delayload").each(function () {
+			$(this).attr('src', $(this).data('src'));
+		});
+		$("img.delayload").css({"display": "block"});
+		return;
+	}
+
+	// Load thumbnails that are further down the page
+	setTimeout(function(){
+		$("img.delayload").each(function () {
+		$(this).attr('src', $(this).data('src'));
+	}); }, 1200);
+
+<% end %>
+	// We only want these styles applied when javascript is enabled,
+	// (also the left/bottom styles for the thumbnail navigation bar below)
+	$('div.content').css('display', 'block');
+
+	var runningLocally = window.location.protocol=='file:'; // whether we're running locally (file://)
+<% if model.nonCSS.showSocial or model.nonCSS.showDownloadAll then %>
+  {
+	var Downloading = false; // true if download underway
+	var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; // whether we're running on iOS
+	function closePopup() {
+		$("#popupOverlay").css({visibility: "hidden", opacity: 0, "z-index": -999});
+		return false;
+	}
+	$("#popupOverlay").on('click', function(e) { if ($(e.target).is('#popupOverlay') || $(e.target).is('.close')) return closePopup() });
+
+	function addSocialLink(id, title, link, icon, colorExt) {
+		$(".social").append('<a target="_blank" id="' + id + '" class="tt tt-ul" data-tt="' + title + '" href="' + link + '"><div class="icon ilg ' + icon + '-' + colorExt + '"></div></a>');
+	}
+	var c = '<%= model.nonCSS.socialColor %>';
+<% if model.nonCSS.showSocial then %>
+	/** Add links to social media **/
+	<% if model.nonCSS.showFBLike then %>
+	addSocialLink('fbLike',"$model.nonCSS.text.FacebookLikeDesc",'#','ic-thumbs-up',c=='color'?'fb':c); //#3b5998
+	/*  FB like is a special case: this link opens an iframe with a like button (see http://jsfiddle.net/zyrm2qop/6/).
+		Another option is to just link to a facebook page and let them like it from there. */
+	function openFBLike() {
+		if (Downloading) return false;
+		var fbLikeUrl = "http://www.facebook.com/plugins/like.php?href=" + encodeURIComponent(currentUrl) + "&amp;layout=standard&amp;show_faces=true&amp;width=225&amp;action=like&amp;colorscheme=light&amp;";
+		$("#popupOverlay").css({visibility: "visible", opacity: 1, "z-index": "auto"});
+		$("#popupOverlay h2").html("<%=model.nonCSS.text.FacebookLikeDesc%>!");
+		$("#popupOverlay .popupContent").html("<iframe id='fb_iframe' src='" + fbLikeUrl + "' frameborder='no' style='margin-top:30px;height:35px;width:225px;'></iframe>");
+		setTimeout(function(){
+			try { if ($("#fb_iframe").contents().find("body").html() == "")
+					$("#popupOverlay .popupContent").html("<%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/AdblockDetected=You may need to disable ad-blocking and retry." %>");
+			} catch(e) { /* arriving here means the iframe loaded (but it's cross-domain/cross-protocol) */ }
+		}, 3000);
+		return false;
+	}
+	$("#fbLike").on('click', openFBLike);
+	<% end %>
+	var fbShareUrl = "http://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(currentUrl) + "&t=" + encodeURIComponent("$model.metadata.siteTitle.value");
+	addSocialLink('fbShare',"$model.nonCSS.text.FacebookShareDesc",fbShareUrl,'ic-facebook',c=='color'?'fb':c); //#3b5998
+	var googlePlusShareUrl = "https://plus.google.com/share?url=" + encodeURIComponent(currentUrl);
+	addSocialLink('googlePlusShare',"$model.nonCSS.text.GooglePlusDesc",googlePlusShareUrl,'ic-googleplus',c=='color'?'gp':c); //#dd4b39
+	var twitterShareUrl = "http://twitter.com/share?text=Check%20out%20this%20image%20gallery&url="+ encodeURIComponent(currentUrl);
+	addSocialLink('tweet',"$model.nonCSS.text.TwitterDesc",twitterShareUrl,'ic-twitter',c=='color'?'tw':c); //#55acee
+	var pinteristPinUrl = "http://pinterest.com/pin/create/button/?url=" + encodeURIComponent(currentUrl) + "&media=" + encodeURIComponent(featuredImgUrl) + "&title=" + encodeURIComponent("$model.metadata.siteTitle.value");
+	addSocialLink('pinIt',"$model.nonCSS.text.PinterestDesc",pinteristPinUrl,'ic-pinterest',c=='color'?'pi':c); //#bd081c
+	var emailUrl = "mailto:?subject=Great%20image%20gallery&amp;body=Check%20out%20the%20image%20gallery%20at%20" + encodeURIComponent(currentUrl);
+	addSocialLink('email',"$model.nonCSS.text.EmailDesc",emailUrl,'ic-mail-square',c=='color'?'em':c); //#ffbb4d
+<% end %>
+<% if model.nonCSS.showDownloadAll then %>
+	if (!iOS <% if mode ~= "preview" then %>&& !runningLocally<% end %>) { /* FileSaver doesn't work right on iOS, even if the user clicks a download link; 
+	it's also little use on a tablet or running locally (where it won't work under chrome or IE); don't show in these cases */
+		addSocialLink('downall',"$model.nonCSS.text.DownloadDesc",'#','ic-download',c=='color'?'dl':c) //#5bb12f
+	}
+	function openDownloadAll() {
+		$("#popupOverlay h2").text("$model.nonCSS.text.DownloadDesc");
+		if (ie <= 9) {
+			$("#popupOverlay .popupContent").html('<p><%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/DownloadUnsupportedIE=This browser cannot support the download feature. Please upgrade to use." %></p>');
+		} else if (!Downloading) {
+			$("#popupOverlay .popupContent").html('\
+			<form action="#" id="download_form">\
+				<ul>\
+					<li><label><input type="radio" name="size" value="lg" checked /><%= LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/MaximumImageSizeLabel/LargePreview=Slide Size" %>: $model.photoSizes.large.width<%=LOC( "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageSizeUnit=px") %></label></li>\
+					<li><label><input type="radio" name="size" value="fl" /><%= LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/MaximumImageSizeLabel/FullPreviewSm=Full Size" %>: $model.nonCSS.fullSizeImageWidth<%=LOC("$$$/AgWPG/Templates/HTML/Panel/Labels/ImageSizeUnit=px") %></label></li>\
+				</ul>\
+				<button type="submit" class="button"><%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/DownloadButton=Download" %></button>\
+			</form>');
+		}
+		<% if not model.nonCSS.showFullSizeImages then %>$("#download_form > ul").css({visibility: "hidden"});<% end %>
+		$("#popupOverlay").css({visibility: "visible", opacity: 1, "z-index": "auto"});
+		return false;
+	}
+	$('#downall').on('click', openDownloadAll);
+<% end %>
+	}
+<% end %>
+	/* Load play/pause icons into foreground for matching colors; b/c these are dynamic, data-grunticon-embed won't work here, so don't use callback. */
+	var playLinkText = '<span><div class="icon ic-play-$icColor"></div> $model.nonCSS.text.Slideshow</span>';
+	var pauseLinkText = '<span><div class="icon ic-pause-$icColor"></div> $model.nonCSS.text.Slideshow</span>';
+	var chromeRunningLocally = (!!window.chrome && runningLocally); // Chrome disallows loading local resources from a local file (works on IE/firefox)
+	try {
+		if (!!grunticon && grunticon.method == "svg" && !chromeRunningLocally) { // Embed SVGs in foreground for styling
+			grunticon.ready(function(){
+				try {
+					icons = grunticon.getIcons( grunticon.getCSS( grunticon.href ) );
+					if (!$$.isEmptyObject(icons)) {
+						playLinkText = $(playLinkText).find("div.icon").css("background-image","none").html(icons["grunticon:.ic-play-wh"]).parent().html();
+						pauseLinkText = $(pauseLinkText).find("div.icon").css("background-image","none").html(icons["grunticon:.ic-pause-wh"]).parent().html();
+					}
+				} catch(err) {/*ignore*/}
+			});
+		} else if (!bsCoverSupport) { // Embed PNG in foreground since image will be mis-sized
+			playLinkText = $(playLinkText).find("div.icon").addFgPngIcon().parent().html();
+			pauseLinkText = $(pauseLinkText).find("div.icon").addFgPngIcon().parent().html();
+		}
+	} catch(err) {
+		// ignore; needed because of some rare, obscure race condition in chrome
+	}
+	
+<% if model.nonCSS.showDownloadAll then %>
+	// Save (downloadable) image paths before loading gallerific
+	var images = [];
+	$('ul.thumbs li>a').each(function (idx, link) {
+	    images.push($(link)[0].href);
+	});
+<% end %>
+
+	/** Initialize the Galleriffic Gallery **/
+	var gallery = $('#thumbs').galleriffic({
+		delay:                     <%= model.nonCSS.slideshowDelay %>,
+		numThumbs:                 8,
+		preloadAhead:              <%= mode=='preview' and 1 or 15 %>,
+		enableTopPager:            true,
+		enableBottomPager:         true,
+		maxPagesToShow:            3,
+		imageBorderWidth:          <%= image_spacer_width+20 %>,  // includes padding-left + border + space for right shadow
+		imageBorderHeight:         <%= image_spacer_width %>,  // includes border + space for bottom shadow
+		imageContainerSel:         '#slideshow',
+		ssControlsContainerSel:    '#controls',
+		navControlsContainerSel:   '#nav',
+		captionContainerSel:       '#caption',
+		loadingContainerSel:       '#image_loading',
+		photoIndexContainerSel:    'div.photo-index',
+		renderSSControls:          true,
+		renderNavControls:         true,
+		playLinkText:              playLinkText,
+		playLinkTitle:             "$model.nonCSS.text.SlideshowPlayDesc",
+		pauseLinkText:             pauseLinkText,
+		pauseLinkTitle:            "$model.nonCSS.text.SlideshowPauseDesc",
+		prevLinkText:              "<div class='icon ic-chevron-left-o-$icColor'></div> $model.nonCSS.text.PreviousLong",
+		prevLinkTitle:             "$model.nonCSS.text.PreviousDesc",
+		nextLinkText:              "$model.nonCSS.text.NextLong <div class='icon ic-chevron-right-o-$icColor'></div>",
+		nextLinkTitle:              "$model.nonCSS.text.NextDesc",
+		nextPageLinkText:          '<div class="icon ic-forward-$icColor"></div>',
+		nextPageLinkTitle:         "$model.nonCSS.text.NextPageDesc",
+		prevPageLinkText:          '<div class="icon ic-backward-$icColor"></div>',
+		prevPageLinkTitle:         "$model.nonCSS.text.PreviousPageDesc",
+		enableHistory:             true,
+		autoStart:                 <%=model.nonCSS.autoStartSlideshow %>,
+		syncTransitions:           true,
+		defaultTransitionDuration: 750,
+		onTransitionOut:           function(slide, caption, isSync, callback) {
+			var duration = this.getDefaultTransitionDuration(isSync);
+			caption.css({opacity: 0.0});
+			var marginLeftFinal = 0
+			if (this.transitionDirection=='prev')
+				marginLeftFinal = slide.outerWidth()
+			else if (this.transitionDirection=='next')
+				marginLeftFinal = -slide.outerWidth()
+			slide.transition( {marginLeft: marginLeftFinal, opacity: 0.0}, duration, 'snap', callback );
+		},
+		onTransitionIn:            function(slide, caption, isSync) {
+			var duration = this.getDefaultTransitionDuration(isSync);
+			var marginLeftInitial = 0
+			if (this.transitionDirection=='prev')
+				marginLeftInitial = -slide.outerWidth()
+			else if (this.transitionDirection=='next')
+				marginLeftInitial = slide.outerWidth()
+			if (marginLeftInitial == 0)  slide.fadeTo(duration, 1.0, captionCB);
+			else  slide.css( {marginLeft: marginLeftInitial, opacity: 1.0} ).transition( {marginLeft: 0}, duration, 'snap', captionCB);
+
+<% if model.nonCSS.overlayCaption then %>
+			// Position the caption at the bottom of the image and set its opacity
+			var slideImage = slide.find('img');
+			caption.width(slideImage.width())
+				.css({
+					'bottom' : this.imageBorderHeight <%= model.nonCSS.showImageShadow and "- 4 " or "" %>- Math.round((slide.height() - slideImage.innerHeight()) / 2),
+					'left' : <%= model.nonCSS.showImageShadow and "4 + " or "" %>Math.round((slideImage.outerWidth() - slideImage.width()) / 2),
+					'max-height' : Math.max(34, Math.min( Math.round(slideImage.height()/4), 110 ))+"px"
+				})
+				.autoDownsizeText(true);
+			$('#caption').width(slideImage.width() + this.imageBorderWidth); // same calculation as used to set #slideshow width
+
+			function captionCB() { caption.captionFade(duration, function() {}); }
+<% else %>
+			function captionCB() { caption.fadeTo(duration, 1.0); }
+<% end %>
+			scrollToCurrentThumb();
+		},
+		onPageTransitionOut:       function(callback) {
+			this.fadeTo('fast', 0.0, callback);
+		},
+		onPageTransitionIn:        function() {
+			this.fadeTo('fast', 1.0);
+			scrollToCurrentThumb(); // for changing media (display size) w/o changing slides
+			icons2Fore(); // new page controllers may need icon sizing (as with other icons on page)
+<% if not model.nonCSS.overlayCaption then %>
+		},
+		onTransitionComplete: function() {
+			$('.resize_text').autoDownsizeText(true); // Downsize caption to fit into container
+<% end %>
+		}
+	});
+<% if mode ~= 'preview' then %>
+	/** Handle touch swipe events **/
+	$('.slideshow-container').swipe({
+		// swipe events for images (on container to allow swiping on empty space; important not to allow up/down so page scroll works)
+		swipeLeft:function(event, direction, distance, duration, fingerCount) {
+			if (fingerCount==1)  gallery.next();
+		},
+		swipeRight:function(event, direction, distance, duration, fingerCount) {
+			if (fingerCount==1)  gallery.previous();
+		},
+<% if model.nonCSS.showFullSizeImages then %>
+		pinchIn: function(event, direction, distance, duration, fingerCount, pinchZoom) {
+			window.location.href = $('div.caption-container').find('.download a').attr('href'); // open full size image
+		},
+<% end %>
+		fingers: $$.fn.swipe.fingers.ALL,
+		excludedElements: "button, input, select, textarea, .noSwipe", // NOT a
+		threshold: 75
+	});
+
+	$('#thumbs').swipe({
+		// swipe events for thumbs (disabled in concise mode with thumb scroll)
+		swipeLeft:function(event, direction, distance, duration, fingerCount) {
+			gallery.nextPage();
+		},
+		swipeRight:function(event, direction, distance, duration, fingerCount) {
+			gallery.previousPage();
+		},
+		swipeUp:function(event, direction, distance, duration, fingerCount) {
+			gallery.nextPage();
+		},
+		swipeDown:function(event, direction, distance, duration, fingerCount) {
+			gallery.previousPage();
+		},
+		fingers: 1,
+		excludedElements: "button, input, select, textarea, .noSwipe", // NOT a
+		threshold: 75
+	});
+<% end %>
+
+	/** Handle page layout changes between thumbnails right/thumbnails bottom **/
+	// if zero, use thumbnail scrollbar, show no thumb pages, just next/previous arrows and add image # in the control bar
+	var thumbnailColumns = 0; // valid values: 0 (concise bottom pager) or 2-4
+	var mqls = [ // list of window.matchMedia() queries to follow/check
+		window.matchMedia("(max-width: 770px)"), // big enough be shown in portrait on most tablets (2 cols supported down to 750px)
+		window.matchMedia("(max-width: 960px)"),
+		window.matchMedia("(max-width: 1280px)")
+	];
+	for (var i=0; i<mqls.length; i++){ // loop through queries
+		mqls[i].addListener(mediaqueryresponse) // call handler function whenever the media query is triggered
+	}
+	mediaqueryresponse(mqls) // call handler function explicitly at startup
+
+	function mediaqueryresponse(mql_notUsed){
+		if (mqls[0].matches && (!ie || ie>8)) { //small/mobile device, use 1 thumbnail row on bottom (for IE<8 scroll solution fails)
+			gallery.numThumbs = gallery.data.length /* all thumbnails */;
+			thumbnailColumns = 0;
+		}
+		else if (mqls[1].matches || max_page_width <= 941 /*.98*cutoff*/ || max_thumb_cols <= 2 || ie<6 <%= mode=='preview' and '|| true' or '' %>) { // use 2 thumbnail columns to left (IE 5 never .matches)
+			gallery.numThumbs = 8;
+			gallery.maxPagesToShow = 3;
+			thumbnailColumns = 2;
+		}
+		else if (mqls[2].matches || max_page_width <= 1255 /*.98*cutoff*/ || max_thumb_cols < 4) { // use 3 thumbnail columns to left
+			gallery.numThumbs = 15;
+			gallery.maxPagesToShow = 6;
+			thumbnailColumns = 3;
+		}
+		else { // use 4 thumbnail columns to left
+			gallery.numThumbs = 24;
+			gallery.maxPagesToShow = 9;
+			thumbnailColumns = 4;
+		}
+
+		if (thumbnailColumns < 2) { // should be 0 (==> use concise bottom controls)
+		
+			gallery.enableTopPager = false;
+			gallery.enableBottomPager = false;
+			gallery.imageBorderWidth = <%= image_spacer_width %>; // shadows/border
+			
+			$('#gallery').insertBefore($('#thumbs'));
+
+			$('#thumbs').css({width: '100%'});
+			$('#gallery').css({'margin-left': "inherit"});
+			startThumbScroll();
+
+			$('div.photo-index').css('visibility','visible');
+			gallery.prevLinkText = '<div class="icon ic-chevron-left-o-$icColor"></div> $model.nonCSS.text.PreviousShort';
+			gallery.nextLinkText = '$model.nonCSS.text.NextShort <div class="icon ic-chevron-right-o-$icColor"></div>';
+			<% if not model.nonCSS.overlayCaption then %>setImportantStyle($('div.caption-container')[0],'height', '70px'); <%end%>
+			
+		} else {
+		
+			gallery.enableTopPager = true;
+			gallery.enableBottomPager = true;
+			gallery.imageBorderWidth = <%= image_spacer_width %> /*shadows/border*/ + 20 /*padding-left*/; // side-effect is to make bottom padding too...
+			if (ie && ie<=8 && ie>6) gallery.imageBorderWidth += 25; /* old IE needs more space between divs */
+
+			$('#gallery').insertAfter($('#thumbs'));
+			
+			endThumbScroll();
+			var thumbsWidthPx = 94 * thumbnailColumns;
+			$('#thumbs').css({'min-width': '188px', 'width' : thumbsWidthPx+'px'}); /*, 'margin-right': -thumbsWidthPx+'px'}); */
+			$('#gallery').css({'margin-left': thumbsWidthPx+'px'});
+
+			$('div.photo-index').css('visibility','hidden');
+			
+			gallery.prevLinkText = '<div class="icon ic-chevron-left-o-$icColor"></div> $model.nonCSS.text.PreviousLong';
+			gallery.nextLinkText = '$model.nonCSS.text.NextLong <div class="icon ic-chevron-right-o-$icColor"></div>';
+			<% if not model.nonCSS.overlayCaption then %>setImportantStyle($('div.caption-container')[0],'height', '100px'); <%end%>
+			
+		}
+		$('div.nav-controls a.prev').html(gallery.prevLinkText).find('.icon').addFgPngIcon();
+		$('div.nav-controls a.next').html(gallery.nextLinkText).find('.icon').addFgPngIcon();
+
+		// updateThumbs(), refresh() handled by resize callback below
+	}
+<% if mode~='preview' then %>
+	// Handle possible need to move / resize view window and/or show updated number of thumbs
+	var windowWidth = $(window).width();
+	$( window ).resize(function() {
+		if ($(window).width() != windowWidth) { // avoid repeated resize() calls on iOS
+			windowWidth = $(window).width();
+			gallery.updateThumbs();
+			gallery.refresh();
+		}
+	});
+<% end %>
+
+<% if model.nonCSS.disableRightClick then %>
+	$('#slideshow').on("contextmenu","img",function(){ // event delegated to any img within #slideshow
+		return false;
+	});
+<% end %>
+
+	/** Handling for scrollable thumbnail bar & custom next/prev page links **/
+	var mouseInThumbs = false;
+
+	function startThumbScroll() {
+		if ( $( "#thumbs .scrollableArea" ).length ) {
+			// thumb scroll already started
+			return;
+		}
+		$('#thumbs ul.thumbs').wrap('<div class="scrollWrapper"><div class="scrollableArea"></div></div>');
+		$('<a class="pageLink prev" style="visibility: hidden;" href="#" title="$model.nonCSS.text.ScrollLeftDesc"><div class="icon ic-angle-left-wh iNav"></div></a>').insertBefore('#thumbs .scrollableArea').find('.icon').addFgPngIcon(); // hidden since at beginning, can't go left
+		$('<a class="pageLink next" style="visibility: visible;" href="#" title="$model.nonCSS.text.ScrollRightDesc"><div class="icon ic-angle-right-wh iNav"></div></a>').insertAfter('#thumbs .scrollableArea').find('.icon').addFgPngIcon();
+
+		gallery.find('a.pageLink.prev').click(function(e) {
+			var scroller = $(".scrollableArea");
+			scroller.animate({scrollLeft: scroller.scrollLeft() - (scroller.innerWidth() - 91)});
+			e.preventDefault();
+		});
+
+		gallery.find('a.pageLink.next').click(function(e) {
+			var scroller = $(".scrollableArea");
+			scroller.animate({scrollLeft: scroller.scrollLeft() + (scroller.innerWidth() - 91)});
+			e.preventDefault();
+		});
+
+		jQuery.fn.swipe && $("#thumbs").swipe("disable");
+
+		if (touchSupported) {
+			// iOS triggers hover on events but rarely off; better to just always show buttons.
+			$('div.navigation a.pageLink').css({opacity: 0.5});
+		} else {
+			$('.scrollWrapper').hover(function(ev) {
+					if (!mouseInThumbs) {
+						$('div.navigation a.pageLink').animate({ opacity: 0.5 }, 'fast');
+						mouseInThumbs = true;
+					}
+				}, function() {
+					$('div.navigation a.pageLink').animate({ opacity: 0.0 }, 'fast');
+					mouseInThumbs = false;
+				});
+			$('div.navigation a.pageLink').hover(function() {
+					if (!mouseInThumbs)
+						$('div.navigation a.pageLink').animate({ opacity: 0.5 }, 'fast');
+					$(this).animate({ opacity: 0.7, queue: false }, 'fast');
+					mouseInThumbs = true;
+				}, function() {
+					if (mouseInThumbs)
+						$(this).animate({ opacity: 0.5 }, 'fast');
+				});
+		}
+		scrollArea = $('#thumbs .scrollableArea');
+		scrollArea.scroll( setPageLinkVisibility ); // will change visibility of page links if first image is not at beginning
+		scrollArea.hScroll(70);
+	}
+
+	function setPageLinkVisibility() {
+		var prevPageLink = $('a.pageLink.prev');
+		var nextPageLink = $('a.pageLink.next');
+		// Show appropriate next / prev page links
+		if ( $(this).scrollLeft() > 0 )
+			prevPageLink.css('visibility', 'visible');
+		else
+			prevPageLink.css('visibility', 'hidden');
+
+		if ( $(this).scrollLeft() < $(this).prop('scrollWidth') - $(this).innerWidth() )
+			nextPageLink.css('visibility', 'visible');
+		else
+			nextPageLink.css('visibility', 'hidden')
+	}
+
+	function endThumbScroll() {
+		$('#thumbs a.pageLink').remove();
+		if ($('#thumbs ul.thumbs').parent().is('.scrollableArea'))
+			$('#thumbs ul.thumbs').unwrap().unwrap();
+		jQuery.fn.swipe && $("#thumbs").swipe("enable");
+	}
+
+	function scrollToCurrentThumb() {
+		var scroller = $("#thumbs .scrollableArea");
+		if (scroller.length)
+			scroller.animate({scrollLeft: scroller.find('ul.thumbs').children()
+				.eq(gallery.currentImage.index).offset().left - scroller.offset().left - (scroller.innerWidth()-91)/2 + scroller.scrollLeft()});
+	}
+
+	// Put PNG icons in foreground for some older browsers
+	function icons2Fore() {
+		if (!bsCoverSupport) {
+		    // images are mis-sized because 'background-size: cover' isn't supported (very old IE, firefox, android)
+			$(".icon").each(function(idx,el) {
+				$(el).addFgPngIcon();
+			});
+		}
+	}
+
+<% if model.nonCSS.overlayCaption then %>
+	/** Support toggling of the caption (when overlay captions enabled) **/
+	var captionOpacity = 0.0;
+	$$.fn.captionFade = function ( duration, callback ) {
+		if (captionOpacity == 0.0)
+			// need to set visibility to avoid invisible buttons from appearing over image
+			$(this).transition({opacity: captionOpacity}, duration, function() { $(this).css('visibility','hidden'); callback(); });
+		else
+			$(this).css('visibility','visible').transition({opacity: captionOpacity}, duration, callback);
+	}
+	$('#captionToggle a').click(function(e) {
+		var link = $(this);
+
+		var isOff = link.hasClass('off'); // (will be on, after this ...)
+		var removeClass = isOff ? 'off' : 'on';
+		var addClass = isOff ? 'on' : 'off';
+		var linkText = (isOff ? "$model.nonCSS.text.HideCaption" : "$model.nonCSS.text.ShowCaption") + ' <sup><div class="icon ic-popup-$icColor"></div></sup>';
+		captionOpacity = isOff ? 0.7 : 0.0;
+
+		link.css({'visibility': 'hidden'}).removeClass(removeClass).addClass(addClass).html(linkText).find('.icon').addFgPngIcon();
+		$('#caption span.image-caption.current').autoDownsizeText(true).captionFade(400, function() { link.css('visibility', 'visible'); });
+
+		e.preventDefault();
+	});
+<% end %>
+
+<% if model.nonCSS.showDownloadAll then %>
+	/* Handle download all button invocation; jszip loading is deferred until here */
+	$("#popupOverlay .popupContent").on("submit", "#download_form", function (e) {
+		e.preventDefault();
+		$("#popupOverlay .popupContent").html('\
+			<div class="progress" id="progress_bar">\
+				<div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>\
+			</div>\
+			<p class="alert" id="result"></p>');
+
+		// show an alert message with a given type ('alert-success, alert-danger, ""')
+		function showMessage(text, alerttype) {
+			$("#result").removeClass().addClass("alert " + alerttype).html(text);
+		}
+		// update the progress bar. with given percent (integer)
+		function updatePercent(percent) {
+			$("#progress_bar .progress-bar").attr("aria-valuenow", percent).css({width : percent + "%"}).text(percent+"%");
+		}
+		showMessage("<%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/DownloadStarting=Download starting... (This may take a while)" %>","");
+
+		var getFullSize = ($(this).find("input[name='size']:checked").val() == "fl");
+
+		$$.getScript('$theRoot/js/jszip-all.min.js', function() {
+			try {
+				var isFileSaverSupported = !!new Blob;
+			} catch (e) {}
+			if (!isFileSaverSupported) { /* can't check this until Blob polyfill loads above */
+				showMessage("<%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/DownloadUnsupportedBlob=Unsupported browser. Try upgrading." %>", "alert-danger");
+				return false;
+			}
+
+			Downloading = true;
+			var zip = new JSZip();
+
+			var Promise = window.Promise;
+			if (!Promise) {
+				Promise = JSZip.external.Promise;
+			}
+			// add file to the zip-to-be
+			function addzipfile(zip, path) {
+				var filename = path.replace(/.*\//g, ""); // strip path
+				zip.file(filename, urlToPromise(path), {binary:true});
+			}
+			// Fetch the content and return the associated promise that will contain the data.
+			function urlToPromise(url) {
+				return new Promise(function(resolve, reject) {
+					JSZipUtils.getBinaryContent(url, function (err, data) {
+						if (err)  reject(err);
+						else  resolve(data);
+					});
+				});
+			}
+
+			for (var i=0; i < images.length; i++) {
+				var image = images[i];
+				if (getFullSize)
+					image = image.replace("im/lg/","im/fl/");
+				addzipfile(zip, image);
+			}
+
+			// asynchronously download all the images into a blob
+			zip.generateAsync({type:"blob", streamFiles: true, compression: "STORE"}, function updateCallback(metadata) {
+				var msg = "";
+				if (metadata.currentFile) {
+					msg += "<%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/DownloadCurrent=downloading:" %> " + metadata.currentFile;
+				}
+				showMessage(msg, '');
+				updatePercent(metadata.percent|0);
+			})
+			.then(function callback(blob) {
+				// when all files have been downloaded, we can trigger the saving of the .zip
+				showMessage("<%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/DownloadSaving=Done! &nbsp;Will now save to disk." %>", "alert-success");
+				Downloading = false;
+				saveAs(blob, "gallery.zip");
+			}, function (e) {
+				showMessage(e, "alert-danger")
+				Downloading = false;
+			});
+		});
+		return false;
+	});
+<% end %>
+
+	/**** Functions to support integration of galleriffic with the jquery.history plugin ****/
+	// This function is called after calling ???.init(), after calling ???.load(), and/or after pushing "Go Back" button of a browser
+	function pageload(hash) {
+		// alert("pageload: " + hash);
+		// hash doesn't contain the first # character.
+		if(hash) {
+			$$.galleriffic.gotoImage(hash);
+		} else {
+			gallery.gotoIndex(0,false,true);
+		}
+	}
+
+	// Initialize history plugin; causes the callback to be called by present location.hash.
+	$$.history.init(pageload);
+
+	// set onlick event for buttons using the jQuery on method
+	$("a[rel='history']").on('click', function(e) {
+		if (e.button != 0) return true;
+
+		var hash = this.href;
+		hash = hash.replace(/^.*#/, '');
+
+		// moves to a new page, where pageload is called at once.
+		// hash mustn't contain "#", "?"
+		$$.history.load(hash);
+
+		return false;
+	});
+
+});
+-->
+</script>
+
+	</body>
+</html>

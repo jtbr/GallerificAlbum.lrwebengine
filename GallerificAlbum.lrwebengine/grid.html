@@ -1,0 +1,234 @@
+<%
+--[[
+The Gallerific Lightroom Web Gallery
+
+Copyright (c) 2015-2016 Justin Briggs (http://trialstravails.blogspot.com)
+
+Licensed under the MIT License:
+   http://www.opensource.org/licenses/mit-license.php
+ ]]
+%>
+<%
+
+function addSlash(url)
+	if ( url ~= "" and string.sub(url,-1,-1) == "/" ) then
+		return url
+	else
+		return url .. "/"
+	end
+end
+
+function max(n, getNum)
+	local value = getNum(1)
+	for i = 2, n do
+		if value < getNum(i) then
+			value = getNum(i)
+		end
+	end
+	return value
+end
+
+function round(n, precision)
+	local divisor = 10^(precision)
+	return math.floor(n * divisor + 0.5) / divisor
+end
+
+--[[ Define some variables to make locating other resources easier]]
+local imgDir = "im"
+local theRoot = "./res"
+local featuredImgIndex = tonumber(model.nonCSS.featuredImageIndex)
+featuredImgIndex = (featuredImgIndex ~= nil and featuredImgIndex>=1 and featuredImgIndex<=numImages) and round(featuredImgIndex,1) or 1
+local featuredImage = imgDir .. "/lg/" .. getImage(featuredImgIndex).exportFilename .. ".jpg"
+local loaderGif = theRoot .. (model.nonCSS.invertNavColors and "/css/loaderWhite.gif" or "/css/loader.gif")
+local transparentImage = theRoot .. "/css/t.gif"
+local imgFn
+local maxwidth = numImages > 0 and max(numImages, function(x) return getImage(x).renditions.large.width end) or 0
+local icColor = model.nonCSS.invertNavColors and "wh" or "bl"
+local canonicalUrl = addSlash(model.metadata.canonicalUrlBase) .. "index.html"
+
+local contactUrl = model.metadata.contactInfo.link
+local homeUrl = model.metadata.homePage.value
+
+--[[ Convert DMS to Decimal Degrees ]]
+function latlongDMStoDD(dms)
+	local deg = 0.0
+	local divisor = 1
+	for w in string.gfind(dms, "%d+") do
+		deg = deg + w/divisor
+		divisor = divisor*60
+	end
+	deg = round(deg, 7)
+	local hemi = string.match(dms, "%u")
+	if hemi == "S" or hemi == "W" then
+		deg = -deg
+	end
+	return deg
+end
+
+--[[ Create link to map at lat lon from gps data in DMS form ]]
+function gpsToLLUrl(gpsData)
+	local latlongStr = ""
+	for dms in string.gfind(gpsData, "%d+%W+%d+%W+%d+%W+%u") do
+		latlongStr = latlongStr .. latlongDMStoDD(dms) .. ","
+	end
+	latlongStr = string.sub(latlongStr, 1, -2)  --[[ eg, 39.1398585,-77.1938174 ]]
+
+	--[[ Create static Maps URL (this still works even without a key) ]]
+-- local googleURL = "http://maps.google.com/maps/api/staticmap?center=" .. latlongStr
+-- googleURL = googleURL .. "&markers=color:red|" .. latlongStr
+-- googleURL = googleURL .. "&maptype=hybrid&zoom=18&size=640x640&sensor=false"
+
+	--[[ See: https://moz.com/ugc/everything-you-never-wanted-to-know-about-google-maps-parameters ]]
+	local googleMapsURL = "http://maps.google.com/maps?f=q&q=loc:" .. latlongStr --[[ marker location ]]
+	--[[ alternatively http://www.bing.com/maps/?cp=39.1398585~-77.1938174&sty=b&lvl=18 (use eg. on windows phone?) ]]
+	googleMapsURL = googleMapsURL .. "&ll=" .. latlongStr --[[ map center ]]
+	googleMapsURL = googleMapsURL .. "&t=h" --[[ hybrid map ]]
+	googleMapsURL = googleMapsURL .. "&z=18" -- "&z=6" for wide/continent level zoom
+
+	return googleMapsURL
+end
+
+function urlIze(s)
+	return s:gsub('%%','%%25'):gsub("'",'%%27'):gsub('"','%%22'):gsub(' ','%%20'):gsub('#','%%23'):gsub('<','%%3C'):gsub('>','%%3E'):gsub('&','%%26'):gsub('/','%%2F'):gsub('?','%%3F')
+end
+
+--[[ Create link to map centered on city ]]
+function cityUrl(sublocation, city, state, country)
+	local googleMapsURL = "http://maps.google.com/maps?f=q&t=h&q=" --[[ hybrid map centered on city/sublocation ]]
+	--[[alternatively: http://www.bing.com/maps/?v=2&sty=b&where1=Paris, France]]
+	if sublocation ~= "" then
+		googleMapsURL = googleMapsURL .. urlIze(sublocation) .. "+" 
+	end
+	googleMapsURL = googleMapsURL .. urlIze(city) .. ','
+	if state ~= "" then
+		googleMapsURL = googleMapsURL .. "+" .. urlIze(state)
+	end
+	if country ~= "" then
+		googleMapsURL = googleMapsURL .. "+" .. urlIze(country)
+	end
+	return googleMapsURL
+end
+
+--[[ Generate markup for map link for image, if applicable ]]
+function getMapsContent(im) 
+	local content=""
+	-- all location metadata saved to one field to avoid overly sullying the GUI; parse here.
+	local m = {}; i = 1
+	for str in string.gmatch(im.metadata.locationData, "([^;]*);;") do
+		m[i] = str;  i = i + 1
+	end
+	local sublocation = m[1];	local city        = m[2]
+	local state       = m[3];	local country     = m[4]
+	local gpsCoords   = m[5]
+
+	local color = model.nonCSS.overlayCaption and (model.nonCSS.invertNavColors and "bl" or "wh") or icColor
+	local template = "<a href='%s' target='map' class='gps tt tt-ul' data-tt='" .. model.nonCSS.text.LocationLinkDesc .. "'><div class='icon ic-compass-"..color.." i2x'></div></a>"
+
+	if (model.nonCSS.showMaps and gpsCoords ~= "") then
+		content = string.format(template, gpsToLLUrl(gpsCoords))
+	elseif (model.nonCSS.mapsForCities and city ~= "" and (state ~= "" or country ~="")) then
+		content = string.format(template, cityUrl(sublocation, city, state, country))
+	end
+	return content
+end
+
+function stripTags(str)
+	return string.gsub(str, "(%b<>)", "")
+end
+
+-- Remove emptiness from caption comments generated by LR (remove empty punctuation [up to 4 consecutive] and groupings, trim, remove remaining punctuation at edges)
+function myStrip(str) -- "%(" eg escapes (, "%s-" is 0..many spaces, minimally matched
+	str = str:gsub(",%s-,",","):gsub(";%s-;",";"):gsub("%.%s-%.","."):gsub(",%s-,",","):gsub(";%s-;",";"):gsub("%.%s-%.",".") -- punctuation
+	str = str:gsub("[%[%({]+[;,%.%s]-[%]%)}]+",""):gsub("([%[%({]+)[;,%.%s]+","%1"):gsub("[;,%.%s]+([%]%)}]+)","%1") -- empty groupings and punctuation at inside ends of groupings
+	return str:gsub("^[;,%.%s]*(.-)[;,%.%s]*$", "%1") -- trim, including punctuation at ends of string
+end
+
+%>
+<% --[[ Include the page header]] %>
+<%@ include file="header.html" %>
+
+<% if model.nonCSS.titlePosition.above then %>
+		<div class="header pagewidth">
+<% else %>
+		<div class="header" style="margin-top:10px;">
+<% end %>
+<% if model.nonCSS.logoPosition.above and (mode == 'preview' or model.appearance.logo.display) then %>
+			<div class="logo $model.nonCSS.logoPosition.class $model.nonCSS.logoGroup.class" style="padding-bottom: 8px;"><a href="$homeUrl">
+				<img width="<%= getIdentityPlateSize().width %>" height="<%= getIdentityPlateSize().height %>" src="$imgDir/logo.png" alt="Logo">
+			</a></div>
+<% end %>
+
+<% if model.nonCSS.titlePosition.above then %>
+			<div class="group $model.nonCSS.titlePosition.class" id="titles">
+				<a href="index.html" class="titleColor">
+					<h1 onclick="clickTarget( this, 'metadata.siteTitle.value' );" id="metadata.siteTitle.value" class="titleColor group $model.nonCSS.titlePosition.class">$model.metadata.siteTitle.value</h1>
+				</a>
+				<h2 onclick="clickTarget( this, 'metadata.collectionTitle.value' );" id="metadata.collectionTitle.value" class="group $model.nonCSS.titlePosition.class">$model.metadata.collectionTitle.value</h2>
+				<p onclick="clickTarget( this, 'metadata.collectionDescription.value' );" id="metadata.collectionDescription.value" class="group textColor $model.nonCSS.titlePosition.class">$model.metadata.collectionDescription.value</p>
+			</div>
+<% end %>
+		</div>
+		<div style="clear: both;"></div>
+
+		<div id="page" class="pagewidth">
+		<div id="container">
+<% if not model.nonCSS.titlePosition.above then %>
+			<a href="index.html" class="titleColor">
+				<h1 onclick="clickTarget( this, 'metadata.siteTitle.value' );" id="metadata.siteTitle.value" class="titleColor">$model.metadata.siteTitle.value</h1>
+			</a>
+			<h2 onclick="clickTarget( this, 'metadata.collectionTitle.value' );" id="metadata.collectionTitle.value">$model.metadata.collectionTitle.value</h2>
+			<p onclick="clickTarget( this, 'metadata.collectionDescription.value' );" id="metadata.collectionDescription.value" class="textColor">$model.metadata.collectionDescription.value</p>
+<% end %>
+
+			<!-- Start Gallerific html Containers -->
+			<div id="gallery" class="content group">
+				<div id="control_bar" style="right: 0; text-align: center;">
+					<div id="controls" class="controls"></div>
+					<div id="nav" class="controls"></div>
+					<div class="photo-index" style="visibility: hidden; margin: 0 auto; padding-top: 5px"></div>
+				</div>
+				<div class="slideshow-container group">
+					<div id="image_loading" class="loader"></div>
+					<div id="slideshow" class="slideshow noflicker unselectable" style="height: 1000px"></div>
+	<% if model.nonCSS.overlayCaption then %>
+					<div id="caption" class="caption-container group resize_text noflicker"></div>
+				</div>
+				<div id="captionToggle" class="controls">
+					<a href="#toggleCaption" class="off">$model.nonCSS.text.ShowCaption <sup><div class="icon ic-popup-$icColor"></div></sup></a>
+	<% else %>
+				</div>
+				<div id="caption" class="caption-container group resize_text">
+	<% end %>
+				</div>
+	<% if mode == 'preview' then %>
+				<span id="debug"><%= LOC "$$$/AgWPG/HTML/Label/InLRNote=Note: A limit of 8 thumbnails are shown for testing inside lightroom." %></span>
+	<% end %>
+			</div>
+			<div id="thumbs" class="navigation unselectable <%= model.nonCSS.disableCenterCrop and 'noCenterCrop' or '' %>">
+				<ul class="thumbs noscript"> <!-- begin images -->
+<lr:ThumbnailGrid>
+<lr:GridPhotoCell>
+<li>
+<% imgFn = image.exportFilename .. ".jpg" %><a class="thumb" href="$imgDir/lg/$imgFn" title="<%= model.nonCSS.showImageTooltips and myStrip(image.metadata.title) or '' %>"><% --[[ Omitted: id="$image.imageID" imagetitle="$image.metadata.title" imagedescription="$image.metadata.description" imagewidth="$image.renditions.large.width" imageheight="$image.renditions.large.height" ]] %>
+	<div class="center-cropped"><% if cellIndex>(mode=='preview' and 8 or 24) then %><img class="delayload<% if image.renditions.thumb.width < image.renditions.thumb.height then %> portrait<% end %>" src="$transparentImage" data-src="$imgDir/th/$imgFn"/><noscript><img src="$imgDir/th/$imgFn"/></noscript><% else %><img src="$imgDir/th/$imgFn"<% if image.renditions.thumb.width < image.renditions.thumb.height then %> class="portrait"<% end %>/><% end %></div><% --[[ Omitted: title="$imgFn" alt="$image.metadata.title" id="$image.imageID" ]] %>
+</a>
+<div class="caption">
+<%= getMapsContent(image) %>
+<% if model.nonCSS.showFullSizeImages then %>
+<div class="download"><a href="$imgDir/fl/$imgFn">$model.nonCSS.text.FullSizeImage</a></div>
+<% end %>
+	<div class="image-title"><%= myStrip(image.metadata.title) %></div><div class="image-desc"><%=  myStrip(image.metadata.description) %></div>
+</div>
+</li>
+</lr:GridPhotoCell>
+<lr:GridRowEnd>
+</lr:GridRowEnd>
+</lr:ThumbnailGrid>
+				</ul> <!-- end images -->
+			</div>
+			<div style="clear: both;"></div>
+		</div> <!-- container -->
+		</div> <!-- page -->
+
+<% --[[ Include the page footer]] %>
+<%@ include file="footer.html" %>

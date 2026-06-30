@@ -1,0 +1,104 @@
+#!/bin/bash
+##################################################
+# Deploys a Gallerific gallery to the web server
+##################################################
+# Does the following:
+# - Optionally add a home button link at the top of a gallery.
+# - May gzip css/js/html files and upload that to S3 instead, setting metadata Content-Type to text/css / js / html and Content-Encoding to gzip
+# - Minifies jpg images
+# - Upload (only) the files that have changed
+# - Ensures that files are public, and reduced redundancy storage (which is cheaper); can be confirmed using S3 Browser app.
+# - Adds Cache-Control header to im folder (and other non-text) setting it to "public, max-age=86400" which caches it for 24 days. S3 will also automatically use ETag, which if checked will confirm there have been no changes to files.
+# - Ensures that Content-Type is set appropriately (so full size jpegs are viewed in browser by default, eg)
+# You may also want to export larger full size panoramas using the Export function and deploy_images.
+##################################################
+# - Requires s3cmd Install (Linux/cygwin: get zip, python setup.py install [requires python-setuptools and easy_install dateutil]) (Mac via homebrew: brew update && brew install s3cmd && s3cmd --configure) and "./s3cmd --configure"
+# - Requires mozjpeg v3.0+ (https://github.com/mozilla/mozjpeg, http://mozjpeg.codelove.de/binaries.html)
+# - Recommend zopfli [https://github.com/google/zopfli] which compresses 4-8% smaller than gzip
+##################################################
+# *** For best jpegs, recommend saving under lightroom with quality 93, and using lossy compression at mozjpeg quality 80 here **
+# Note that web export jpeg quality is different and lower than normal export quality, which probably mirrors photoshop's save vs save for web.
+# The mid-size (lg) images are the ones that really need optimizing (80 is needed for them but 72 is fine for the larger (fl) ones)
+# *** If you've already exported jpegs with quality eg. 64 within lightroom, use 'lossless' here, which still saves 60%+ on thumbnails and 8-10% on larger images ***
+##################################################
+# Usage: deploy_to_s3 [directorytodeploy]
+##############CONFIG##############################
+S3_BUCKET=s3://yourbucket
+REDUCED_REDUNDANCY=-rr
+ADD_HOME_LINK=0
+#GZIP_CMD='gzip -n -9'
+GZIP_CMD=zopfli
+JPEG_LOSSLESS=0     # 1 for lossless, 0 for lossy (with quality levels below)
+JPEG_QUALITY_SM=80  # quality (recommend 65-85) for area < 800x800px
+JPEG_QUALITY_MD=65  # quality (recommend 60-80) for area < 1200x1200px
+JPEG_QUALITY_LG=55  # quality (recommend 45-70) for area >= 1200x1200px
+#S3CMD_DEBUG="-v --dry-run" # can use --dry-run on s3cmd to see the effects but not execute, also can use -v for verbose
+##################################################
+
+GALLERY_DIR=$1
+GALLERY_DIR=${GALLERY_DIR%/} # remove trailing slash
+if [ -z "$GALLERY_DIR" ] || [ ! -d "$GALLERY_DIR" ] ; then 
+  echo Invalid Parameter. USAGE: deploy_to_s3 [directory to deploy] 
+  exit
+fi
+DEPLOY_DIR=$(mktemp -d)
+#echo $DEPLOY_DIR $JPEG_CMD $JPEG_QUALITY $GALLERY_DIR
+
+cp -Rf $GALLERY_DIR $DEPLOY_DIR
+rm -rf $DEPLOY_DIR/$GALLERY_DIR/.hg*
+
+if [ $ADD_HOME_LINK -eq 1 ]; then
+  echo ADDING CUSTOM HOME LINK TO INDEX.HTML ...
+  sed -i '/<div class="header"[^<]*>/ a <p><a style="color: #548BBF !important;" href="../index.html">Home</a></p>' \
+      $DEPLOY_DIR/$GALLERY_DIR/index.html 
+fi
+
+# compress text files and mark them for direct download by browsers using gzip encoding 
+echo COMPRESSING TEXT FILES ...
+find $DEPLOY_DIR -regex '.*\.\(html\|js\|css\|xml\|txt\|svg\)' -exec $GZIP_CMD {} \; -exec mv {}.gz {} \;
+echo UPLOADING COMPRESSED TEXT FILES ...
+s3cmd sync $S3CMD_DEBUG --acl-public $REDUCED_REDUNDANCY --add-header="Content-Encoding":"gzip" --add-header="Cache-Control":"no-cache" \
+                --guess-mime-type --no-mime-magic --exclude='*' --rinclude='.*\.(html|js|css|xml|txt|svg)' $DEPLOY_DIR/$GALLERY_DIR $S3_BUCKET/
+# svg file mime type not detected correctly (in s3cmd 1.5.2)
+#s3cmd sync $S3CMD_DEBUG --acl-public $REDUCED_REDUNDANCY --add-header="Content-Encoding":"gzip" --add-header="Cache-Control":"no-cache" \
+#                -m 'image/svg+xml' --exclude='*' --rinclude='.*\.svg' --signature-v2 $DEPLOY_DIR/$GALLERY_DIR $S3_BUCKET/
+echo
+echo
+
+# re-compress jpegs using mozjpeg encoder (https://github.com/mozilla/mozjpeg, http://mozjpeg.codelove.de/binaries.html)
+echo IMPROVING COMPRESSION ON JPGS ...
+# Note some EXIF/comments may be lost, particularly using lossy compression
+#pushd/popd necessary because mozjpeg for windows doesn't handle roots (eg /tmp)
+pushd $DEPLOY_DIR/$GALLERY_DIR
+#echo find im -regex '.*\.jpg' -exec $JPEG_CMD \; -exec $JPEG_CMD2 \;
+if [ $JPEG_LOSSLESS -eq 1 ] ; then 
+  JPEG_CMD='jpegtran -outfile {}.tmp {}'
+  JPEG_CMD2='mv {}.tmp {}'
+  find . -regex '.*\.jpg' -exec $JPEG_CMD \; -exec $JPEG_CMD2 \;
+else
+  JPEG_CMD='djpeg -outfile {}.pnm {}'   
+  find im -regex '.*\.jpg' -exec $JPEG_CMD \;
+
+  #compression cutoffs at 800x800 and 1200x1200
+  find . -regex '.*\.pnm' -size -1920k | \
+      while read f; do cjpeg -quality $JPEG_QUALITY_SM -outfile ${f%.pnm} $f; done
+  find . -regex '.*\.pnm' -size +1920k -size -4320k | 
+      while read f; do cjpeg -quality $JPEG_QUALITY_MD -outfile ${f%.pnm} $f; done
+  find . -regex '.*\.pnm' -size +4320k | \
+      while read f; do cjpeg -quality $JPEG_QUALITY_LG -outfile ${f%.pnm} $f; done
+  
+  find . -regex '.*\.pnm' -exec rm -f {} \; # clean up after lossy compression
+fi
+popd
+echo UPLOADING IMAGES AND REMAINING FILES ...
+s3cmd sync $S3CMD_DEBUG --acl-public $REDUCED_REDUNDANCY --add-header="Cache-Control":"public,max-age=86400,no-transform" \
+                --guess-mime-type --no-mime-magic $DEPLOY_DIR/$GALLERY_DIR $S3_BUCKET/
+echo
+echo
+
+echo REMOVING DELETED FILES ON S3 SIDE CLEANING UP TEMP FILES ...
+s3cmd sync $S3CMD_DEBUG --delete-removed --acl-public $DEPLOY_DIR/$GALLERY_DIR/* $S3_BUCKET/$GALLERY_DIR/
+rm -rf $DEPLOY_DIR
+echo
+echo
+echo DONE!

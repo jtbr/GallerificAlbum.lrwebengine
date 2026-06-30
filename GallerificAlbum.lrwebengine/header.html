@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<% --[[
+The Gallerific Lightroom Web Gallery
+
+Copyright (c) 2015-2016 Justin Briggs (http://trialstravails.blogspot.com)
+
+Licensed under the MIT License:
+   http://www.opensource.org/licenses/mit-license.php
+ ]]
+%>
+<% -- [[ Determine the maximum width of page within the body, based upon size of main image / gallery ]]
+-- page size: width of gallery / .66 = width of container + page-container margin
+
+local shadow_width = model.nonCSS.showImageShadow and 14 or 2
+local image_spacer_width = 2*model.nonCSS.imageBorderSize + shadow_width
+-- [[ maxpage width is page border/padding + thumbnail colsize + widest image + horizontal imSpacing ]]
+local max_page_width = 48 + 94*model.nonCSS.thumbColumns + maxwidth + (image_spacer_width + 20)
+%>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+		<meta name="viewport"  content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" /> <!-- for mobile devices -->
+		<meta name="generator" content="Gallerific Web Gallery plugin v<%= model.metadata.gallerificVersion.value %> for Adobe Photoshop Lightroom" />
+		<meta name="Keywords" content="<%= model.metadata.keywords %>" />
+<% if model.nonCSS.noIndexing then %>
+		<meta name="robots" content="noindex,nofollow" />
+<% else %>
+		<meta name="robots" content="index,follow" />
+<% end %>
+
+		<title><%= stripTags(model.metadata.siteTitle.value) %></title>
+		<meta property="og:title" content="<%= stripTags(model.metadata.siteTitle.value) %>" /> <!-- opengraph used by facebook et al -->
+		<meta property="og:type" content="website" />
+		<meta property="og:description" content="<%= (model.metadata.collectionTitle.value or '')=='' and stripTags(model.metadata.collectionDescription.value) or stripTags(model.metadata.collectionTitle.value) %>" />
+		<meta property="og:image" content="<%= addSlash(model.metadata.canonicalUrlBase) .. featuredImage %>" />
+		<meta property="og:url" content="$canonicalUrl" />
+		<link rel="canonical" href="$canonicalUrl" />
+<% if mode == 'preview' then %>
+		<link rel="stylesheet" href="$theRoot/css/galleriffic.css" type="text/css" />
+		<link rel="stylesheet" href="$theRoot/css/custom.css" type="text/css" title="Custom Settings" />
+		<link rel="stylesheet" href="$theRoot/icons/icons.fallback.css" type="text/css" /> <!-- png icons from files -->
+		<script type="text/javascript" src='$theRoot/js/jquery-1.11.3.min.js'></script>
+		<script type="text/javascript" src='$theRoot/js/jquery.transit.min.js'></script>
+		<script type="text/javascript" src='$theRoot/js/jquery.galleriffic.js'></script>
+		<script type="text/javascript" src='$theRoot/js/jquery.plugins.js'></script>
+		<script type="text/javascript" src='$theRoot/js/media.match.min.js'></script>
+		<script type="text/javascript"> <!--
+			bsCoverSupport = false;
+			touchSupported = false;
+<% else %>
+		<script type="text/javascript"> <!--
+			/* fallback.js v1.1.7 | http://fallback.io/ | Salvatore Garbesi <sal@dolox.com> | (c) 2015 Dolox, Inc. */
+			(function(l,k){var b={g:[],w:{},A:0,head:k.getElementsByTagName("head")[0],a:{},p:0,f:[],e:{},m:0,d:{},c:{},r:0,t:function(){for(var a in b.k)b.k[a]&&b.v(b.k[a])},k:["Array","Function","Object","String"],v:function(a){b["is_"+a.toLowerCase()]=function(f){return"undefined"!==typeof f&&Object.prototype.toString.call(f)=="[object "+a+"]"}},i:function(a){this.is_function(a)||(a=function(){});return a},n:function(a,f){for(var c in a)if(a[c]===f)return c;return-1},is_defined:function(a){try{if(eval("window."+a))return!0}catch(f){}return!1},importer:function(a,f){var c,b,d,g,h,k,l,m={};for(d in a)if(g=a[d])this.is_string(g)&&(g=[g]),this.is_array(g)&&(c=[],this.is_array(this.a[d])&&(c=this.a[d]),m[d]=g,this.a[d]=c.concat(g));g={};if(this.is_object(f)&&(this.is_object(f.shim)||(this.is_object(f.deps)?f.shim=f.deps:this.is_object(f.dependencies)&&(f.shim=f.dependencies)),this.is_object(f.shim)))for(h in k=f.shim,k)if(c=k[h],this.a[h]&&c&&(this.is_string(c)&&(c=[c]),this.is_array(c))){l=[];for(b in c)d=c[b],this.a[d]&&d!==h&&l.push(d);c=[];this.is_array(this.d[h])&&(c=this.d[h]);g[h]=l;this.d[h]=c.concat(l)}return{a:m,d:g}},css:{}};b.css.l=function(a){if(!k.styleSheets)return!1;var f,c,e;for(f in k.styleSheets)if(c=k.styleSheets[f],0!==c)try{if(c.rules&&(e=b.css.q(c.rules,a))||c.cssRules&&(e=b.css.q(c.cssRules,a)))return e}catch(d){}return!1};b.css.q=function(a,b){var c,e;for(c in a)if(e=a[c],e.selectorText===b)return!0;return!1};
+			<% --[[ comment here to avoid lua errors ]] %>
+			b.load=function(a,b,c){var e,d;if(!this.is_object(a))return!1;this.is_function(b)&&(c=b,b={});this.is_object(b)||(b={});a=this.importer(a,b);for(e in a.a)d=a.a[e],this.d[e]||this.b(e,d);this.is_function(b.callback)&&this.ready([],b.callback);this.is_function(c)&&this.ready([],c)};b.ready=function(a,b){var c,e;if(this.is_function(a))b=a,a=[];else{if(!this.is_array(a)||this.is_string(a))a=[a];for(c in a)e=a[c],this.a[e]&&!this.d[e]&&this.b(e,this.a[e])}this.g.push({i:this.i(b),a:a});return this.j()};b.j=function(){var a,b,c,e,d,g=[],h=[];for(a in this.g)if(d=this.g[a],this.is_object(d)&&this.is_array(d.a)&&this.is_function(d.i)){e=!1;if(0<d.a.length){b=0;for(c in this.c)0<=this.n(d.a,c)&&b++;b===d.a.length&&(e=!0)}else this.p===this.r+this.m&&(e=!0);e?h.push(d.i):g.push(this.g[a])}this.g=g;for(a in h)h[a](this.c,this.e)};b.u=function(){var a,b,c,e;for(c in this.d)if((e=this.d[c])&&!this.c[c]){a=0;for(b in e)this.c[e[b]]&&a++;a===e.length&&(this.b(c,this.a[c]),delete this.d[c])}};b.b=function(a,b){if(-1!==this.n(this.f,a))return!1;this.p++;this.f.push(a);return this.b.o(a,b)};b.b.o=function(a,f){var c,e="js",d={loaded:!1,h:a,f:!0,url:f.shift(),s:f};if(-1<d.url.indexOf(".css")){e="css";if(b.css.l(a))return d.f=!1,b.b.c(d);c=k.createElement("link");c.B=!0;c.rel="stylesheet";c.href=d.url}else{if(b.is_defined(a))return d.f=!1,b.b.c(d);c=k.createElement("script");c.src=d.url}c.onload=function(){return"js"===e&&!b.is_defined(a)||"js"!==e&&!b.css.l(a)&&Object.hasOwnProperty.call(l,"ActiveXObject")&&!l.ActiveXObject?b.b.e(d):b.b.c(d)};c.onreadystatechange=function(){if(!this.readyState||"loaded"===this.readyState||"complete"===this.readyState)return this.onreadystatechange=null,"js"!==e||b.is_defined(a)?b.b.c(d):b.b.e(d)};c.onerror=function(){return b.b.e(d)};return b.head.appendChild(c)};b.b.e=function(a){a.f=!1;b.e[a.h]||(b.e[a.h]=[]);b.e[a.h].push(a.url);return a.s.length?b.b.o(a.h,a.s):(b.m++,b.j())};b.b.c=function(a){a.loaded||(a.loaded=!0,b.c[a.h]=a.url,b.r++);b.u();return b.j()};b.t();l.fallback=l.fbk=b})(window,document);
+
+			// Retrieve the following libraries for the page, with fallbacks and dependencies
+			var libs = {
+				gallerific_css: '$theRoot/css/galleriffic.css',
+				custom_css: '$theRoot/css/custom.css',
+
+				// JavaScript libraries. THE KEY MUST BE THE LIBRARY'S WINDOW VARIABLE! Values are ordered fallback sources.
+				'jQuery': [ 'https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js',
+							'https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js',
+							'$theRoot/js/jquery-1.11.3.min.js' ],
+				'jQuery.galleriffic': '$theRoot/js/jquery.galleriffic.js',
+				'jQuery.history': '$theRoot/js/jquery.plugins.js', // actually loads many functions we use, not just history
+				'jQuery.transit': [ 'https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.min.js',
+									'$theRoot/js/jquery.transit.min.js' ],
+				'jQuery.fn.swipe': [ 'https://cdnjs.cloudflare.com/ajax/libs/jquery.touchswipe/1.6.9/jquery.touchSwipe.min.js',
+									'$theRoot/js/jquery.touchSwipe.min.js' ] };
+			if (! window.matchMedia)
+				libs['matchMedia'] = '$theRoot/js/media.match.min.js';
+
+			fallback.load(libs, {
+				// Shim jQuery plugins so that they will only load after jQuery has completed
+				shim: {
+					'jQuery.galleriffic': ['jQuery'],
+					'jQuery.history': ['jQuery'],
+					'jQuery.transit': ['jQuery'],
+					'jQuery.fn.swipe': ['jQuery']
+				}
+			});
+<% end %>
+			/* We only want the thumbnails to display when javascript is disabled, and page_loading to display when enabled */
+			if (!navigator.userAgent.match(/Opera Mini/i))
+				document.write('<style>.noscript { display: none; } img.delayload { display: block; } div#page_loading { z-index: 999; }</style>');
+
+<% if model.metadata.canonicalUrlBase=="" then %>
+			var loc = window.location;
+			var currentUrl = loc.protocol + '//' + loc.hostname + loc.pathname;
+			var featuredImgUrl = currentUrl.replace("index.html","$featuredImage");
+<% else %>
+			var currentUrl = "$canonicalUrl";
+			var featuredImgUrl = "<%= addSlash(model.metadata.canonicalUrlBase) .. featuredImage %>";
+<% end %>
+
+			/* used to set layout */
+			var max_page_width = <%= max_page_width %>;
+			var max_thumb_cols = <%= model.nonCSS.thumbColumns %>;
+
+			function initPage() {
+				setTimeout(function(){  if (typeof jQuery!=='undefined') $("#page_loading").fadeOut(500); else document.getElementById('page_loading').style.display = 'none'; }, 500);
+			};
+			window.onload = initPage;
+<% if mode ~= 'preview' then %>
+			/*! grunt-grunticon Stylesheet Loader - v2.1.6 | https://github.com/filamentgroup/grunticon | (c) 2015 Scott Jehl, Filament Group, Inc. | MIT license. */
+			!function(){function e(e,n,t){"use strict";var o=window.document.createElement("link"),r=n||window.document.getElementsByTagName("script")[0],a=window.document.styleSheets;return o.rel="stylesheet",o.href=e,o.media="only x",r.parentNode.insertBefore(o,r),o.onloadcssdefined=function(e){for(var n,t=0;t<a.length;t++)a[t].href&&a[t].href===o.href&&(n=!0);n?e():setTimeout(function(){o.onloadcssdefined(e)})},o.onloadcssdefined(function(){o.media=t||"all"}),o}function n(e,n){e.onload=function(){e.onload=null,n&&n.call(e)},"isApplicationInstalled"in navigator&&"onloadcssdefined"in e&&e.onloadcssdefined(n)}!function(t){var o=function(r,a){"use strict";if(r&&3===r.length){var i=t.navigator,c=t.document,s=t.Image,d=!(!c.createElementNS||!c.createElementNS("http://www.w3.org/2000/svg","svg").createSVGRect||!c.implementation.hasFeature("http://www.w3.org/TR/SVG11/feature#Image","1.1")||t.opera&&-1===i.userAgent.indexOf("Chrome")||-1!==i.userAgent.indexOf("Series40")),l=new s;l.onerror=function(){o.method="png",o.href=r[2],e(r[2])},l.onload=function(){var t=1===l.width&&1===l.height,i=r[t&&d?0:t?1:2];t&&d?o.method="svg":t?o.method="datapng":o.method="png",o.href=i,n(e(i),a)},l.src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",c.documentElement.className+=" grunticon"}};o.loadCSS=e,o.onloadCSS=n,t.grunticon=o}(this),function(e,n){"use strict";var t=n.document,o="grunticon:",r=function(e){if(t.attachEvent?"complete"===t.readyState:"loading"!==t.readyState)e();else{var n=!1;t.addEventListener("readystatechange",function(){n||(n=!0,e())},!1)}},a=function(e){return n.document.querySelector('link[href$="'+e+'"]')},i=function(e){var n,t,r,a,i,c,s={};if(n=e.sheet,!n)return s;t=n.cssRules?n.cssRules:n.rules;for(var d=0;d<t.length;d++)r=t[d].cssText,a=o+t[d].selectorText,i=r.split(");")[0].match(/US\-ASCII\,([^"']+)/),i&&i[1]&&(c=decodeURIComponent(i[1]),s[a]=c);return s},c=function(e){var n,r,a,i;a="data-grunticon-embed";for(var c in e){i=c.slice(o.length);try{n=t.querySelectorAll(i)}catch(s){continue}r=[];for(var d=0;d<n.length;d++)null!==n[d].getAttribute(a)&&r.push(n[d]);if(r.length)for(d=0;d<r.length;d++)r[d].innerHTML=e[c],r[d].style.backgroundImage="none",r[d].removeAttribute(a)}return r},s=function(n){"svg"===e.method&&r(function(){c(i(a(e.href))),"function"==typeof n&&n()})};e.embedIcons=c,e.getCSS=a,e.getIcons=i,e.ready=r,e.svgLoadedCallback=s,e.embedSVG=s}(grunticon,this)}();
+
+			// load 1 of the 3 icon def'n csses; SVG 95% of the time (could also add link in noscript section, but no icons needed then)
+			grunticon(["$theRoot/icons/icons.data.svg.css", "$theRoot/icons/icons.data.png.css", "$theRoot/icons/icons.fallback.css"]);
+<% end %>
+			-->
+		</script>
+
+<% if mode ~= 'preview' then %>
+		<noscript>
+			<link rel="stylesheet" href="$theRoot/css/galleriffic.css" type="text/css" />
+			<link rel="stylesheet" href="$theRoot/css/custom.css" type="text/css" title="Custom Settings" />
+			<link rel="stylesheet" href="$theRoot/icons/icons.fallback.css" type="text/css" />
+		</noscript>
+<% end %>
+
+<% --[[ Special hacks for Internet Explorer ]] %>
+		<!--[if lt IE 7.]> <script defer type="text/javascript" src="$theRoot/js/pngfix.js"></script> <![endif]-->
+		<!--[if IE]><style type="text/css"> .group { zoom: 1; /* triggers hasLayout */ }</style> <![endif]-->
+		<style> div.pagewidth { max-width: <%=max_page_width %>px !important; } </style>
+<% if model.nonCSS.markupHeadInjection ~= "" then %>
+		<!-- custom markup begins -->
+		<%= model.nonCSS.markupHeadInjection %>
+		<!-- custom markup ends -->
+<% end %>
+
+<% if mode == 'preview' then %>
+		<% --[[ Scripting support for rollovers and (when previewed in Lightroom) live Update, photobin syncing ]] %>
+		<script type="text/javascript">
+		<!--
+			window.AgMode = "$mode";
+			window.AgOnLoad = function() {
+				tellLightroomWhatImagesWeAreUsing();
+				setActiveImageSize( "large" );
+				<% if image then %>
+				callCallback( "showInPhotoBin", "$image.imageID" );
+				<% end %>
+			}
+		-->
+		</script>
+		<script type="text/javascript" src="$theRoot/js/live_update.js"></script>
+<% else %>
+		<script type="text/javascript">var clickTarget = function() {}</script>
+<% end %>
+	</head>
+	<body>
+<% --[[ img tag below is used to request the loader gif from the server earlier; the background image is what is shown. BGcolor needs to be inline to avoid content flash with fallback.js]] %>
+<% if mode ~= 'preview' then %>
+		<div id="page_loading" class="loader" style="position: fixed; height: 100%; width: 100%; background: $model.nonCSS.pageLoader.backgroundColor url('$loaderGif') no-repeat center center"></div>
+<% end %>

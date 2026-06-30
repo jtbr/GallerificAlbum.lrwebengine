@@ -1,0 +1,891 @@
+--[[
+
+galleryInfo.lrweb
+This file specifies the development environment within Lightroom.
+
+The views table creates the panel entries available within the Lightroom UI.
+
+--
+
+The Gallerific Lightroom Web Gallery
+
+Copyright (c) 2015-2016 Justin Briggs (http://trialstravails.blogspot.com)
+
+Licensed under the MIT License:
+   http://www.opensource.org/licenses/mit-license.php
+]]
+
+local useMultiBind = false
+return {
+	LrSdkVersion = 4.0,
+	LrSdkMinimumVersion = 2.0, -- minimum SDK version required by this plugin
+
+	title = "Gallerific HTML5 Gallery",
+	id = "com.briggs.gallerific", -- unique plug-in id
+	galleryType = "lua", -- lua
+	maximumGallerySize = 50000,
+	supportsLiveUpdate = true,
+	aboutBoxFile = "about.html",
+
+	model = {
+		["metadata.gallerificVersion.value"] = "1.3.1", -- change collectionDescription as well.
+
+		-- The following metadata are located in the header of the sample and can be edited by the user using the Site Info panel.
+		["metadata.siteTitle.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/SiteTitle=Site Title",
+		["metadata.collectionTitle.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/CollectionTitle=My Photographs",
+		["metadata.collectionDescription.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/CollectionDescription=Photo Gallery created by Gallerific Plugin v1.3.1 for Adobe Lightroom",
+
+		["appearance.siteTitle.cssID"] = "#liveUpdateSiteTitle",
+		["appearance.collectionTitle.cssID"] = "#liveUpdateCollectionTitle",
+		["appearance.collectionDescription.cssID"] = "#liveUpdateCollectionDescription",
+
+		-- Contact details that are currently displayed in the footer section of the sample.  The 'link' is the valid email address and 'value' the text representation of the link
+		["metadata.contactInfo.link"] = {
+			value = LOC "$$$/AgWPG/Templates/HTML/Defaults/ContactLink=mailto:user@domain",
+			metadata = { [ "ag:dataType" ] = "webLink" },
+		},
+		["metadata.contactInfo.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/ContactInfo=Contact Name",
+
+		["nonCSS.titlePosition"] = { class="", above=true },
+		["nonCSS.logoPosition"] = { class="", above=false },
+
+		-- The name of the homepage file when published
+		["metadata.homePage.value"] = {
+			value = "index.html",
+			metadata = { [ "ag:dataType" ] = "webLink" },
+		},
+
+		-- User-readable strings, customizable in the "Navigation Text Customization" panel
+		["nonCSS.text.PreviousLong"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/PreviousLong=Previous Photo",
+		["nonCSS.text.PreviousShort"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/PreviousShort=Previous",
+		["nonCSS.text.PreviousDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/PreviousDesc=Previous Photo (or left arrow)",
+		["nonCSS.text.NextLong"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/NextLong=Next Photo",
+		["nonCSS.text.NextShort"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/NextShort=Next",
+		["nonCSS.text.NextDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/NextDesc=Next Photo (or right arrow)",
+		["nonCSS.text.PreviousPageDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/PreviousPageDesc=Previous Page (or PgUp)",
+		["nonCSS.text.NextPageDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/NextPageDesc=Next Page (or PgDn)",
+		["nonCSS.text.Slideshow"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/Slideshow=Slideshow",
+		["nonCSS.text.SlideshowPlayDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/SlideshowPlay=Auto-loop through slides (spacebar to toggle)",
+		["nonCSS.text.SlideshowPauseDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/SlideshowPause=Pause Slideshow (spacebar to toggle)",
+		["nonCSS.text.ScrollLeftDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/ScrollLeftDesc=Scroll Left",
+		["nonCSS.text.ScrollRightDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/ScrollRightDesc=Scroll Right",
+		["nonCSS.text.ShowCaption"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/ShowCaption=Show Caption",
+		["nonCSS.text.HideCaption"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/HideCaption=Hide Caption",
+		["nonCSS.text.FullSizeImage"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/FullSizeImage=Full size image",
+		["nonCSS.text.LocationLinkDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/LocLinkDesc=Show location in map window",
+		["nonCSS.text.FacebookLikeDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/FacebookLike=Like this on Facebook",
+		["nonCSS.text.FacebookShareDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/FacebookShare=Share via Facebook",
+		["nonCSS.text.GooglePlusDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/GooglePlusShare=Share via Google+",
+		["nonCSS.text.TwitterDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/TwitterShare=Tweet about this",
+		["nonCSS.text.PinterestDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/PinIt=Pin on Pinterest",
+		["nonCSS.text.EmailDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/EmailDesc=Share via e-mail",
+		["nonCSS.text.DownloadDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/DownloadDesc=Download all images",
+
+		-- the large properties are used to display the main image in the center panel of the page
+		["photoSizes.large.directory"] = "im/lg", -- names are short to save space in html file
+		["photoSizes.large.maxHeight"] = 1680,
+		["photoSizes.large.maxWidth"] = 1680,
+		["photoSizes.large.metadataExportMode"] = useMultiBind and "copyright"
+			or function() return photoSizes.thumb.metadataExportMode end,
+		["photoSizes.large.height"] = useMultiBind and 450
+			or function() return photoSizes.large.width end,
+		["photoSizes.large.width"] = 720,
+
+		["photoSizes.full.directory"] = "im/fl",
+		["photoSizes.full.maxHeight"] = 4000,
+		["photoSizes.full.maxWidth"] = 4000,
+		["photoSizes.full.metadataExportMode"] = useMultiBind and "copyright"
+			or function() return photoSizes.thumb.metadataExportMode end,
+		["nonCSS.showFullSizeImages"] = true,
+		["nonCSS.showDownloadAll"] = false,
+		["nonCSS.fullSizeImageWidth"] = 1600,
+		-- avoid generating big full images if links disabled
+		["photoSizes.full.height"] = useMultiBind and 1200 
+			or function() return nonCSS.showFullSizeImages and nonCSS.fullSizeImageWidth or 100 end, 
+		["photoSizes.full.width"] = function() return nonCSS.showFullSizeImages and nonCSS.fullSizeImageWidth or 100 end,
+
+		-- the thumb properties are responsible for displaying the thumbnails in the left-hand panel of the page.
+		["photoSizes.thumb.directory"] = "im/th",
+		["photoSizes.thumb.height"] = 100,
+		["photoSizes.thumb.metadataExportMode"] = "copyright",
+		["photoSizes.thumb.width"] = 100,
+		["photoSizes.thumb.cropMode"] = "maximum", -- fill the square thumbnail (minimum keeps aspect)
+		["photoSizes.tracking"] = false,
+		["nonCSS.tracking"] = false,
+
+		["lightroomApplication.identityPlateExport"] = "(main)", -- optional entry displaying identity plate
+		["lightroomApplication.jpegQuality"] = 70, -- quality of images when published
+		["lightroomApplication.sizeBeingViewed"] = "thumb",
+		["lightroomApplication.useWatermark"] = true,
+		["lightroomApplication.watermarkID"] = "",
+		["lightroomApplication.outputSharpening"] = 2,
+
+		["nonCSS.numCols"] = 1, -- as we are using a scrollbar panel, 1 column is sufficient.
+		["nonCSS.numRows"] = 50001, -- greater than maximum gallery size; we don't want multiple grid pages.
+
+		["appearance.logo.display"] = false,
+		["appearance.logo.cssID"] = ".logo",
+		["nonCSS.logoGroup.class"] = function() return (nonCSS.logoPosition.above == nonCSS.titlePosition.above and nonCSS.logoPosition.class == nonCSS.titlePosition.class) and "group" or "" end,
+
+		["nonCSS.body.backgroundColor"] = "#EEEEEE",
+		["nonCSS.body.showBackgroundImg"] = false,
+		["nonCSS.body.backgroundUrl"] = "./bg.png",
+		["nonCSS.body.backgroundRepeat"] = "repeat",
+
+		["nonCSS.pageLoader.backgroundColor"] = function() return LrColorToWebColor( nonCSS.body.backgroundColor ) end,
+
+		-- body and page/gallery appearance
+		["appearance.body.background"] = function()
+			return string.format( "%s %s", LrColorToWebColor( nonCSS.body.backgroundColor ),
+									nonCSS.body.showBackgroundImg and ("url(" .. nonCSS.body.backgroundUrl .. ") " .. nonCSS.body.backgroundRepeat .. " scroll top center") or "" )
+		end,
+		["appearance.body.color"] = function() return appearance.textColor.color end,
+		["appearance.body.text-align"] = "center",
+		["appearance.body.font-family"] = "\"Lucida Grande\", \"Lucida Sans Unicode\", Verdana, Helvetica, Arial, sans-serif",
+		["appearance.body.font-size"] = "75%",
+		["appearance.body.cssID"] = "body",
+
+		["appearance.page.background-color"] = "#FFFFFF",
+		["appearance.page.border-color"] = "#DDDDDD",
+		["appearance.page.border-style"] = "solid solid solid",
+		["appearance.page.cssID"] = "div#page",
+
+		["appearance.tt.background"] = function() return nonCSS.invertNavColors and "rgba(255,255,255,0.7)" or "rgba(0,0,0,0.7)" end,
+		["appearance.tt.color"] = function() return nonCSS.invertNavColors and "#000" or "#FFF" end,
+		["appearance.tt.cssID"] = ".tt:after",
+
+
+		-- header appearance
+		["appearance.h1.font-family"] = "\"Trebuchet MS\", Verdana, sans-serif",
+		["appearance.h1.font-size"] = "2.5em",
+		["appearance.h1.letter-spacing"] = "-1px",
+		["appearance.h1.cssID"] = "h1",
+
+		["appearance.h2.font-family"] = function() return appearance.h1.font-family end,
+		["appearance.h2.font-size"] = "1.8em",
+		["appearance.h2.letter-spacing"] = "-1px",
+		["appearance.h2.cssID"] = "h2",
+
+		["nonCSS.titlesInside"] = false, -- or above gallery
+		["nonCSS.thumbColumns"] = 4,
+
+		["appearance.textColor.color"] = "#444444", -- subtitles, captions, descriptions etc
+		["appearance.textColor.cssID"] = ".textColor",
+
+		["appearance.titleColor.color"] = "#333333",
+		["appearance.titleColor.cssID"] = ".titleColor",
+
+		["appearance.links.color"] = function() return appearance.navLinks.color end, -- let default link color be same as navigation links color (there aren't any unless somebody embeds them in text)
+		["appearance.links.cssID"] = "a",
+
+		["appearance.navLinks.color"] = "#666666",
+		["appearance.navLinks.cssID"] = "div.content a, div.navigation a",
+
+		-- enable / disable image shadow, and change border size, shadow/border color
+		["nonCSS.showImageShadow"] = true,
+		["nonCSS.imageShadowColor"] = "#000000",
+		["nonCSS.imageBorderSize"] = 1,
+
+		-- caption overlay or inline below image
+		["nonCSS.overlayCaption"] = false,
+		["appearance.captionToggle.display"] = function() return nonCSS.overlayCaption and "block" or "none" end,
+		["appearance.captionToggle.cssID"] = "#captionToggle a",
+		["appearance.captionContainer.position"] = function() return nonCSS.overlayCaption and "static" or "relative" end,
+		["appearance.captionContainer.clear"] = function() return nonCSS.overlayCaption and "none" or "left" end,
+		["appearance.captionContainer.height"] = function() return nonCSS.overlayCaption and "auto" or "100px" end,
+		["appearance.captionContainer.cssID"] = "div.caption-container",
+		-- we want width, left & bottom overridden in case of overlay; unfortunately LR always puts "!important", so setting to default fails. Setting to "" causes the browser to ignore it since it's invalid.
+		["appearance.imageCaption.width"] = function() return nonCSS.overlayCaption and "" or "100%" end,
+		["appearance.imageCaption.top"] = function() return nonCSS.overlayCaption and "" or "0" end,
+		["appearance.imageCaption.left"] = function() return nonCSS.overlayCaption and "" or "0" end,
+		["appearance.imageCaption.cssID"] = "span.image-caption",
+		["appearance.caption.background-color"] = function() return nonCSS.overlayCaption and (nonCSS.invertNavColors and "#FFF" or "#000") or "transparent" end,
+		["appearance.caption.color"] = function() return nonCSS.overlayCaption and (nonCSS.invertNavColors and "#333" or "#CCC") or "inherit" end,
+		["appearance.caption.cssID"] = "div.caption",
+		["appearance.captionA.color"] = function() return nonCSS.overlayCaption and (nonCSS.invertNavColors and "#000" or "#FFF") or "inherit" end,
+		["appearance.captionA.cssID"] = "div.content div.caption a",
+		["appearance.captionToggle.cssID"] = "#captionToggle a",
+
+		["appearance.image.border-color"] = "#CCCCCC",
+		["appearance.image.border-width"] = function() return string.format( "%spx", nonCSS.imageBorderSize ) end,
+		["appearance.image.border-style"] = "solid",
+		["appearance.image.box-sizing"] = "content-box",
+		["appearance.image.vertical-align"] = "middle",
+		["appearance.image.margin-left"] = function() return nonCSS.showImageShadow and "4px" or "0px" end,
+		["appearance.image.margin-top"] = function() return nonCSS.showImageShadow and "4px" or "0px" end,
+		["appearance.image.box-shadow"] = function()
+			return nonCSS.showImageShadow and string.format( "3px 3px 9px %s", LrColorToWebColor( nonCSS.imageShadowColor ) ) or "none"
+		end,
+		["appearance.image.-moz-box-shadow"] = function()
+			return nonCSS.showImageShadow and string.format( "3px 3px 9px %s", LrColorToWebColor( nonCSS.imageShadowColor ) ) or "none"
+		end,
+		["appearance.image.-webkit-box-shadow"] = function()
+			return nonCSS.showImageShadow and string.format( "3px 3px 9px %s", LrColorToWebColor( nonCSS.imageShadowColor ) ) or "none"
+		end,
+		["appearance.image.-ms-filter"] = function()
+			return nonCSS.showImageShadow and
+				   string.format( "progid:DXImageTransform.Microsoft.Shadow(Strength=9, Direction=135, Color='%s')", LrColorToWebColor( nonCSS.imageShadowColor ) )
+				   or "none"
+		end, -- for IE 8
+		["appearance.image.-filter"] = function()
+			return nonCSS.showImageShadow and
+				   string.format( "progid:DXImageTransform.Microsoft.Shadow(Strength=9, Direction=135, Color='%s')", LrColorToWebColor( nonCSS.imageShadowColor ) )
+				   or "none"
+		end, -- for IE 5.5-7
+		["appearance.image.border-collapse"] = "separate", -- needed for IE9+
+		["appearance.image.cssID"] = "div.slideshow img",
+
+		["appearance.imgDelayLoad.background-image"] = function() return nonCSS.invertNavColors and url('imgLoadingWhite.gif') or url('imgLoading.gif') end,
+		["appearance.imgDelayLoad.cssID"] = "img.delayload",
+
+		["appearance.thumb.border-color"] = function() return appearance.image["border-color"] end,  -- can't have dashes in variable names
+		["appearance.thumb.cssID"] = "ul.thumbs li a.thumb",
+
+		["appearance.download.border-color"] = function() return appearance.image["border-color"] end,
+		["appearance.download.cssID"] = "div.download",
+
+		-- Slideshow options
+		["nonCSS.autoStartSlideshow"] = false,
+		["nonCSS.slideshowDelay"] = 2500,
+
+		-- Thumbnail cropping (centered and cropped to square or scaled to 75px max width?)
+		["nonCSS.disableCenterCrop"] = false,
+
+		-- Social / sharing options:
+		["nonCSS.showSocial"] = true,
+		["nonCSS.showFBLike"] = true,
+		["nonCSS.socialColor"] = "color",
+		["nonCSS.noIndexing"] = false,
+		["metadata.keywords"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/keywords=photography,photos,gallery,album,imagery,images,photographer,adobe,photoshop,lightroom,gallerific",
+		["nonCSS.featuredImageIndex"] = "1",
+		["metadata.canonicalUrlBase"] = "http://www.mydomain.com/MyGallerificAlbum/",
+		["nonCSS.markupHeadInjection"] = "",
+
+		["nonCSS.disableRightClick"] = false,
+
+		["nonCSS.showImageTooltips"] = true,
+
+		["nonCSS.contactLeft"] = false;
+		["nonCSS.contact.class"] = function() return nonCSS.contactLeft and "left" or "" end,
+
+		-- Map view options:
+		["nonCSS.showMaps"] = true,
+		["nonCSS.mapsForCities"] = true,
+
+		-- thumb / thumb pager appearance
+		["nonCSS.invertNavColors"] = false, -- for dark backgrounds
+
+		["appearance.thumbDeselected.background-color"] = function() return nonCSS.invertNavColors and "#000000" or "#FFFFFF" end,
+		["appearance.thumbDeselected.cssID"] = "ul.thumbs li a.thumb",
+		["appearance.thumbSelected.background-color"] = function() return nonCSS.invertNavColors and "#FFFFFF" or "#000000" end,
+		["appearance.thumbSelected.cssID"] = "ul.thumbs li.selected a.thumb",
+
+		["appearance.thumbPagerSelected.background-color"] = function() return appearance.navLinks.color end,
+		["appearance.thumbPagerSelected.border-color"] = function() return appearance.image["border-color"] end,
+		["appearance.thumbPagerSelected.color"] = function() return appearance.page["background-color"] end,
+		["appearance.thumbPagerSelected.cssID"] = "div.pagination span.current",
+
+		["appearance.thumbPagerHover.background-color"] = function() return nonCSS.invertNavColors and "#333333" or "#CCCCCC" end,
+		["appearance.thumbPagerHover.cssID"] = "div.pagination a:hover, div.pagination a:focus, div.pagination a:active",
+
+		["appearance.thumbPager.border-color"] = function() return appearance.image["border-color"] end,   -- background color == page-background by inheritance
+		["appearance.thumbPager.cssID"] = "div.pagination a",
+
+		["appearance.loaderIcon.background-image"] = function() return nonCSS.invertNavColors and "url(loaderWhite.gif)" or "url(loader.gif)" end, -- see also header.html
+		["appearance.loaderIcon.cssID"] = "div.loader",
+
+		["perImageSetting.title"] = {
+			enabled = true,
+			value = "{{com.adobe.title}}",
+		},
+		["perImageSetting.description"] = {
+			enabled = true,
+			value = "{{com.adobe.caption}}",
+		},
+		["perImageSetting.locationData"] = {
+			enabled = true,
+			value = [[{{com.adobe.location}};;{{com.adobe.city}};;{{com.adobe.state}};;{{com.adobe.country}};;{{com.adobe.GPS}};;]],
+		},
+	},
+	properties = {
+		perImage = {
+			{
+				id = "title",
+				title = LOC "$$$/WPG/HTML/PerImage/properties/ImageTitle=Image Title",
+			},
+			{
+				id = "description",
+				title = LOC "$$$/WPG/HTML/PerImage/properties/ImageCaption=Image Description",
+			},
+			{
+				id = "locationData",
+				title = LOC "$$$/WPG/HTML/PerImage/properties/LocationData=Location Data (Don't edit this)",
+			},
+		},
+	},
+	iconicPreview = {
+		flashMovie = "gallerific-preview.png",
+	},
+	views = function( controller, f )
+		local LrView = import "LrView"
+		local bind = LrView.bind
+		local multibind = f.multibind
+
+		return {
+			labels = f:panel_content {
+				bindToObject = controller,
+				f:header_section {
+					f:static_text  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/TitlesText=Any title/info may be omitted by leaving it empty",
+						place_vertical = 0.5,
+						height_in_lines = -1,
+						width = 300,
+					},
+				},
+				f:subdivided_sections {
+					-- Site Info panel for user to change site title, collection and description entries.
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/SiteTitle=Site Title",
+						value = bind "metadata.siteTitle.value",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/CollectionTitle=Collection Title",
+						value = bind "metadata.collectionTitle.value",
+					},
+					f:labeled_text_input {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/CollectionDescription=Collection Description",
+						value = bind "metadata.collectionDescription.value",
+					},
+					f:content_column {
+						f:group_box {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Location=Placement",
+							-- spacing = f:control_spacing(),
+							f:popup_menu {
+								value = bind 'nonCSS.titlePosition', -- current value bound to same key as static text
+								items = { -- the menu items and their values
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/TopLeft=Above left", value = {class="left", above=true} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/TopCenter=Centered above", value = {class="", above=true} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/TopRight=Above right", value = {class="right", above=true} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/InsideLeft=Inside left", value = {class="", above=false} },
+								},
+								value_equal = function(v1, v2) return (v1.class==v2.class and v1.above==v2.above) end,
+							},
+						},
+					},
+				},
+				f:subdivided_sections {
+					-- update the contact details displayed in the footer of the page
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ContactInfo=Contact Info",
+						value = bind "metadata.contactInfo.value",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/link=Web or Mail Link",
+						value = bind "metadata.contactInfo.link",
+						wraps = false,
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ContactLeft=Place to bottom-left of the gallery, not centered below it",
+							value = bind "nonCSS.contactLeft",
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/IdentityPlate=Identity Plate",
+							value = bind "appearance.logo.display",
+						},
+					},
+					f:identity_plate {
+						value = bind "lightroomApplication.identityPlateExport",
+						enabled = bind "appearance.logo.display",
+					},
+					f:labeled_text_input {
+						title = LOC "$$$/AgWPG/Templates/HTML/IdentityPlate/Link=Web or Mail Link",
+						value = bind "metadata.homePage.value",
+						wraps = false,
+						enabled = bind "appearance.logo.display",
+					},
+					f:content_column {
+						f:group_box {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Location=Placement",
+							enabled = bind "appearance.logo.display",
+							f:popup_menu {
+								value = bind 'nonCSS.logoPosition', -- current value bound to same key as static text
+								fill_horizontal = 1,
+								items = { -- the menu items and their values
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/TopLeft=Above left", value = {class="left", above=true} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/TopCenter=Centered above", value = {class="", above=true} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/TopRight=Above right", value = {class="right", above=true} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/BottomLeft=Below left", value = {class="left", above=false} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/BottomCenter=Centered below", value = {class="", above=false} },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/BottomRight=Below Right", value = {class="right", above=false} },
+								},
+								value_equal = function(v1, v2) return (v1.class==v2.class and v1.above==v2.above) end,
+							},
+						},
+					},
+				},
+			},
+			colorPalette = f:panel_content {
+				bindToObject = controller,
+				-- colour adjustments of the page body background
+				f:color_content_column {
+					f:label_and_color_row {
+						color = bind "nonCSS.body.backgroundColor",
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/BodyBackground=Body Background",
+					},
+				},
+				f:subdivided_sections{
+					-- colour adjustments of the photo gallery elements
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/Gallery=Gallery",
+					},
+					f:color_content_column {
+						f:label_and_color_row {
+							color = bind "appearance.page.background-color",
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/GalleryBackground=Gallery Background",
+						},
+						f:label_and_color_row {
+							color = bind "appearance.page.border-color",
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/GalleryBorder=Gallery Border",
+						},
+						f:label_and_color_row {
+							color = bind "appearance.image.border-color",
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/ImageBorder=Image Border",
+						},
+						f:checkbox_and_color_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/ImageShadow=Image Shadow",
+							enabled = bind "nonCSS.showImageShadow",
+							color = bind "nonCSS.imageShadowColor",
+						},
+					},
+				},
+				f:subdivided_sections {
+					-- colour adjustments of text
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/Text=Text",
+					},
+					f:color_content_column {
+						f:label_and_color_row {
+							color = bind "appearance.textColor.color",
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/TextColor=General Text (eg. subtitles, captions)",
+						},
+						f:label_and_color_row {
+							color = bind "appearance.titleColor.color",
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/Title=Title",
+						},
+						f:label_and_color_row {
+							color = bind "appearance.navLinks.color",
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/NavigationLinks=Navigation Controls",
+						},
+					},
+				},
+			},
+			appearanceConfiguration = f:panel_content {
+				bindToObject = controller,
+				f:subdivided_sections {
+					-- adjust large image sizes
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/ImageSizes=Image Sizes",
+					},
+					f:slider_content_column {
+						f:static_text  {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageSizeText=Image will be scaled down to fit onto the web page,\nbut will never be scaled up from this size.",
+							height_in_lines = -1,
+							place_vertical = 0.5,
+							width=320,
+						},
+						f:slider_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/MaximumImageSizeLabel/LargePreview=Slide Size",
+							value = useMultiBind and multibind {
+								"photoSizes.large.width",
+								"photoSizes.large.height",
+								"appearance.liveUpdateImageSize.maxSize",
+							}
+							or bind "photoSizes.large.width",
+							tracking = bind "nonCSS.tracking",
+							unit = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageSizeUnit=px",
+							max = 1680,
+							min = 420,
+							width_in_digits = 4,
+							precision = 0,
+						},
+					},
+					f:slider_content_column {
+						f:slider_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/MaximumImageSizeLabel/FullPreview=Full (Expanded) Size",
+							value = useMultiBind and multibind {
+								"nonCSS.fullSizeImageWidth",
+								"photoSizes.full.height",
+							}
+							or bind "nonCSS.fullSizeImageWidth",
+							unit = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageSizeUnit=px",
+							max = 4000,
+							min = 600,
+							width_in_digits = 4,
+							precision = 0,
+						},
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/EnableFullSizeLink=Enable full size image links",
+							value = bind "nonCSS.showFullSizeImages",
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/Caption Appearance=Image Caption & Tooltip Appearance",
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/CaptionOverlay=Overlay captions on image rather than below",
+							value = bind "nonCSS.overlayCaption",
+						},
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageTooltips=Show tooltip with image title when hovering on image",
+							value = bind "nonCSS.showImageTooltips",
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/ImageBorderSize=Image Border Size",
+					},
+					f:slider_content_column {
+						f:slider_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageBorderWidth=Width",
+							value = bind "nonCSS.imageBorderSize",
+							unit = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageBorderWidthUnit=px",
+							max = 20,
+							min = 1,
+							width_in_digits = 2,
+							precision = 0,
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/NavigationColors=Thumb / Page Navigation Overrides",
+					},
+					f:slider_content_column {
+						f:slider_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/MaxThumbnailColumns=Max # of thumbnail columns",
+							value = bind "nonCSS.thumbColumns",
+							unit = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Column=col",
+							max = 4,
+							min = 2,
+							width_in_digits = 1,
+							precision = 0,
+							integral = true,
+						},
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/InvertNavColors=Invert fixed colors for dark backgrounds",
+							value = bind "nonCSS.invertNavColors",
+						},
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Colors/ThumbnailCropping=Disable centering & cropping thumbnails to squares",
+							value = bind "nonCSS.disableCenterCrop",
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/SlideshowControls=Slideshow Options",
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/AutoStartSlideshow=Start Slideshow automatically upon page load",
+							value = bind "nonCSS.autoStartSlideshow",
+						},
+					},
+					f:slider_content_column {
+						f:slider_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/SlideshowDelay=Delay between slides",
+							value = bind "nonCSS.slideshowDelay",
+							unit = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/SlideTimeUnit=ms",
+							max = 10000,
+							min = 1000,
+							width_in_digits = 5,
+							precision = 100,
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/SharingControls=Public Sharing & Social Media Options",
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/EnableDownloadAll=Include link to download whole gallery",
+							value = bind "nonCSS.showDownloadAll",
+						},
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IncludeSocial=Include social media sharing icon links",
+							value = bind "nonCSS.showSocial",
+						},
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IncludeFBLike=Also include Facebook 'like this page' icon & popup",
+							value = bind "nonCSS.showFBLike",
+							enabled = bind "nonCSS.showSocial",
+						},
+						f:group_box {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IconColorTitle=Icons' Colors",
+							f:popup_menu {
+								value = bind 'nonCSS.socialColor', -- current value bound to same key as static text
+								items = { -- the menu items and their values
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/SocialColorBrands=Brands' Colors", value = 'color' },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/SocialColorBlack=Black", value = 'bl' },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/SocialColorDark=Dark", value = 'dk' },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/SocialColorLight=Light", value = 'lt' },
+									{ title = LOC "$$$/AgWPG/Templates/HTML/Labels/SocialColorWhite=White", value = 'wh' },
+								},
+							},
+							enabled = LrView.bind {
+								keys = { 'nonCSS.showSocial', 'nonCSS.showDownloadAll' }, -- bind to both keys
+								operation = function( binder, values, fromTable )
+									return values['nonCSS.showSocial'] or values['nonCSS.showDownloadAll']
+								end,
+							},
+						},
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/DiscourageIndexing=Discourage search engines from indexing this site",
+							value = bind "nonCSS.noIndexing",
+						},
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Keywords=Search keywords for gallery",
+						value = bind "metadata.keywords",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/HeadInjection=Markup to insert into head (for analytics, web fonts, etc)",
+						value = bind "nonCSS.markupHeadInjection",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/FeaturedImage=Index of image to be featured on social media (1=1st image)",
+						value = bind "nonCSS.featuredImageIndex",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/DestUrl=Destination URL path (to index.html) for this gallery, if any",
+						value = bind "metadata.canonicalUrlBase",
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/MapControls=Map/Geolocation options",
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IncludeMapLinks=Link to map view for images with a GPS location",
+							value = bind "nonCSS.showMaps",
+						},
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IncludeCityMapLinks=Link to map view for images with city specified",
+							value = bind "nonCSS.mapsForCities",
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/BackgroundImage=Use Background Image For Page (not shown)",
+							value = bind "nonCSS.body.showBackgroundImg",
+						},
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/BGImgUrl=URL for repeating BG image. May be a global URL\n(http://), relative to the 'css' folder (if you copy it \nthere manually), or a Data URL. May be transparent.",
+						value = bind "nonCSS.body.backgroundUrl",
+						enabled = bind "nonCSS.body.showBackgroundImg",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/BGImgRepeat=Repeat property of background image (expert only)",
+						value = bind "nonCSS.body.backgroundRepeat",
+						enabled = bind "nonCSS.body.showBackgroundImg",
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/Fonts=Font-family Stacks",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/GeneralFonts=General Fonts",
+						value = bind "appearance.body.font-family",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/TitleFonts=Title Fonts",
+						value = bind "appearance.h1.font-family",
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/PreventDownloads=Prevent right click",
+					},
+					f:content_column {
+						f:checkbox_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/DisableRightClick=Disable right click to save image on main image",
+							value = bind "nonCSS.disableRightClick",
+						},
+						f:static_text  {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/RightClickText=Note that anyone with moderate technical skills can still download images with a bit more effort; using watermarks and copyright embedding is recommended. Also, don't forget to disable full size image links and download all.",
+							height_in_lines = -1,
+							margin_top = 10,
+							width = 320,
+						},
+					},
+				},
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/TextStrings=Navigation Text Customization",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/PreviousPhoto=Previous Photo",
+						value = bind "nonCSS.text.PreviousLong",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/PreviousPhotoShort=Previous Photo (short for mobile)",
+						value = bind "nonCSS.text.PreviousShort",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/PreviousPhotoDesc=Previous Photo Description",
+						value = bind "nonCSS.text.PreviousDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/NextPhoto=Next Photo",
+						value = bind "nonCSS.text.NextLong",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/NextPhotoShort=Next Photo (short for mobile)",
+						value = bind "nonCSS.text.NextShort",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/NextPhotoDesc=Next Photo Description",
+						value = bind "nonCSS.text.NextDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Slideshow=Slideshow",
+						value = bind "nonCSS.text.Slideshow",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/SlideshowPlayDesc=Play Slideshow Description",
+						value = bind "nonCSS.text.SlideshowPlayDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/SlideshowPauseDesc=Pause Slideshow Description",
+						value = bind "nonCSS.text.SlideshowPauseDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/PreviousPageDesc=Previous Page Description (for Desktops)",
+						value = bind "nonCSS.text.PreviousPageDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/NextPageDesc=Next Page Description (for Desktops)",
+						value = bind "nonCSS.text.NextPageDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ScrollLeftDesc=Scroll Left Description (for mobile)",
+						value = bind "nonCSS.text.ScrollLeftDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ScrollRightDesc=Scroll Right Description (for mobile)",
+						value = bind "nonCSS.text.ScrollRightDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ShowCaption=Show Caption",
+						value = bind "nonCSS.text.ShowCaption",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/HideCaption=Hide Caption",
+						value = bind "nonCSS.text.HideCaption",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/FullSizeImage=Full size image",
+						value = bind "nonCSS.text.FullSizeImage",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/LocLinkDesc=Geolocation Link Description",
+						value = bind "nonCSS.text.LocationLinkDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/FacebookLikeDesc=Facebook Like Description",
+						value = bind "nonCSS.text.FacebookLikeDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/FacebookShareDesc=Facebook Share Description",
+						value = bind "nonCSS.text.FacebookShareDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/GooglePlusDesc=Share via Google+ Description",
+						value = bind "nonCSS.text.GooglePlusDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/TwitterDesc=Twitter Description",
+						value = bind "nonCSS.text.TwitterDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/PinterestDesc=Pinterest Description",
+						value = bind "nonCSS.text.PinterestDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/EmailDesc=E-mail Description",
+						value = bind "nonCSS.text.EmailDesc",
+					},
+					f:labeled_text_input  {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/EmailDesc=Download all Description",
+						value = bind "nonCSS.text.DownloadDesc",
+					},
+				},
+			},
+			outputSettings = f:panel_content {
+				bindToObject = controller,
+				f:subdivided_sections {
+					f:header_section_label {
+						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageHandling=Large Images",
+					},
+					f:slider_content_column {
+						f:static_text  {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/ImageQualityText=Recommend keeping quality <= 76 for a reasonable size to quality tradeoff for the web.",
+							height_in_lines = -1,
+							place_vertical = 0.5,
+							width = 300,
+						},
+						f:slider_row {
+							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/MaximumImageSizeLabel/JPEGQualityLabel=JPG Quality",
+							value = bind "lightroomApplication.jpegQuality",
+							tracking = bind "lightroomApplication.jpegQuality.tracking",
+							tracking_value = "qualityTracking",
+							unit = "",
+							max = 100,
+							min = 0,
+							width_in_digits = 4,
+							precision = 0,
+						},
+					},
+					f:slider_content_column {
+						f:metadataModeControl {
+							value = useMultiBind and multibind {
+								"photoSizes.thumb.metadataExportMode",
+								"photoSizes.large.metadataExportMode",
+								"photoSizes.full.metadataExportMode",
+							}
+							or bind "photoSizes.thumb.metadataExportMode",
+						},
+					},
+					f:watermark_section( controller ),
+				},
+			},
+		}
+	end,
+}
