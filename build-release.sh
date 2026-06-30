@@ -19,7 +19,7 @@ pandoc readme.md -f gfm -t html5 --template readme-template.html \
   -o README.html
 
 # 2. Package the release: plug-in folder + templates + README.html + license.txt.
-OUT="GallerificAlbum.lrwebengine.zip"
+OUT="GallerificLightroomWebAlbum.zip"
 rm -f "$OUT"
 zip -r "$OUT" GallerificAlbum.lrwebengine Gallerific-Templates README.html license.txt \
   -x '*/.DS_Store' '*/Thumbs.db'

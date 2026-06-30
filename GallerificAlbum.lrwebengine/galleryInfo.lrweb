@@ -28,12 +28,12 @@ return {
 	aboutBoxFile = "about.html",
 
 	model = {
-		["metadata.gallerificVersion.value"] = "1.3.1", -- change collectionDescription as well.
+		["metadata.gallerificVersion.value"] = "1.3.2", -- change collectionDescription as well.
 
 		-- The following metadata are located in the header of the sample and can be edited by the user using the Site Info panel.
 		["metadata.siteTitle.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/SiteTitle=Site Title",
 		["metadata.collectionTitle.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/CollectionTitle=My Photographs",
-		["metadata.collectionDescription.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/CollectionDescription=Photo Gallery created by Gallerific Plugin v1.3.1 for Adobe Lightroom",
+		["metadata.collectionDescription.value"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/CollectionDescription=Photo Gallery created by Gallerific Plugin v1.3.2 for Adobe Lightroom",
 
 		["appearance.siteTitle.cssID"] = "#liveUpdateSiteTitle",
 		["appearance.collectionTitle.cssID"] = "#liveUpdateCollectionTitle",
@@ -73,9 +73,7 @@ return {
 		["nonCSS.text.HideCaption"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/HideCaption=Hide Caption",
 		["nonCSS.text.FullSizeImage"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/FullSizeImage=Full size image",
 		["nonCSS.text.LocationLinkDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/LocLinkDesc=Show location in map window",
-		["nonCSS.text.FacebookLikeDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/FacebookLike=Like this on Facebook",
 		["nonCSS.text.FacebookShareDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/FacebookShare=Share via Facebook",
-		["nonCSS.text.GooglePlusDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/GooglePlusShare=Share via Google+",
 		["nonCSS.text.TwitterDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/TwitterShare=Tweet about this",
 		["nonCSS.text.PinterestDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/PinIt=Pin on Pinterest",
 		["nonCSS.text.EmailDesc"] = LOC "$$$/AgWPG/Templates/HTML/DefaultText/EmailDesc=Share via e-mail",
@@ -253,7 +251,6 @@ return {
 
 		-- Social / sharing options:
 		["nonCSS.showSocial"] = true,
-		["nonCSS.showFBLike"] = true,
 		["nonCSS.socialColor"] = "color",
 		["nonCSS.noIndexing"] = false,
 		["metadata.keywords"] = LOC "$$$/AgWPG/Templates/HTML/DefaultValues/properties/keywords=photography,photos,gallery,album,imagery,images,photographer,adobe,photoshop,lightroom,gallerific",
@@ -633,11 +630,6 @@ return {
 							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IncludeSocial=Include social media sharing icon links",
 							value = bind "nonCSS.showSocial",
 						},
-						f:checkbox_row {
-							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IncludeFBLike=Also include Facebook 'like this page' icon & popup",
-							value = bind "nonCSS.showFBLike",
-							enabled = bind "nonCSS.showSocial",
-						},
 						f:group_box {
 							title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/Appearance/IconColorTitle=Icons' Colors",
 							f:popup_menu {
@@ -819,16 +811,8 @@ return {
 						value = bind "nonCSS.text.LocationLinkDesc",
 					},
 					f:labeled_text_input  {
-						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/FacebookLikeDesc=Facebook Like Description",
-						value = bind "nonCSS.text.FacebookLikeDesc",
-					},
-					f:labeled_text_input  {
 						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/FacebookShareDesc=Facebook Share Description",
 						value = bind "nonCSS.text.FacebookShareDesc",
-					},
-					f:labeled_text_input  {
-						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/GooglePlusDesc=Share via Google+ Description",
-						value = bind "nonCSS.text.GooglePlusDesc",
 					},
 					f:labeled_text_input  {
 						title = LOC "$$$/AgWPG/Templates/HTML/Panel/Labels/TwitterDesc=Twitter Description",

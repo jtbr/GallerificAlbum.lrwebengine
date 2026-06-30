@@ -1,5 +1,5 @@
 
-# Gallerific HTML5 Lightroom Web Album
+# Gallerific HTML5 Lightroom Web Gallery
 
 Thanks for downloading the Gallerific Web Album Plugin for Adobe Lightroom! Hope you enjoy it.
 

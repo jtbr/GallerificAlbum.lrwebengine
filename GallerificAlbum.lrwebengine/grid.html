@@ -74,12 +74,12 @@ function gpsToLLUrl(gpsData)
 	latlongStr = string.sub(latlongStr, 1, -2)  --[[ eg, 39.1398585,-77.1938174 ]]
 
 	--[[ Create static Maps URL (this still works even without a key) ]]
--- local googleURL = "http://maps.google.com/maps/api/staticmap?center=" .. latlongStr
+-- local googleURL = "https://maps.google.com/maps/api/staticmap?center=" .. latlongStr
 -- googleURL = googleURL .. "&markers=color:red|" .. latlongStr
 -- googleURL = googleURL .. "&maptype=hybrid&zoom=18&size=640x640&sensor=false"
 
 	--[[ See: https://moz.com/ugc/everything-you-never-wanted-to-know-about-google-maps-parameters ]]
-	local googleMapsURL = "http://maps.google.com/maps?f=q&q=loc:" .. latlongStr --[[ marker location ]]
+	local googleMapsURL = "https://maps.google.com/maps?f=q&q=loc:" .. latlongStr --[[ marker location ]]
 	--[[ alternatively http://www.bing.com/maps/?cp=39.1398585~-77.1938174&sty=b&lvl=18 (use eg. on windows phone?) ]]
 	googleMapsURL = googleMapsURL .. "&ll=" .. latlongStr --[[ map center ]]
 	googleMapsURL = googleMapsURL .. "&t=h" --[[ hybrid map ]]
@@ -94,7 +94,7 @@ end
 
 --[[ Create link to map centered on city ]]
 function cityUrl(sublocation, city, state, country)
-	local googleMapsURL = "http://maps.google.com/maps?f=q&t=h&q=" --[[ hybrid map centered on city/sublocation ]]
+	local googleMapsURL = "https://maps.google.com/maps?f=q&t=h&q=" --[[ hybrid map centered on city/sublocation ]]
 	--[[alternatively: http://www.bing.com/maps/?v=2&sty=b&where1=Paris, France]]
 	if sublocation ~= "" then
 		googleMapsURL = googleMapsURL .. urlIze(sublocation) .. "+" 

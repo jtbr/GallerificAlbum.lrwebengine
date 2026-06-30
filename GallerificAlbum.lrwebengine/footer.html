@@ -24,7 +24,7 @@ Licensed under the MIT License:
 			</a></div>
 <% end %>
 		</div>
-<% if model.nonCSS.showDownloadAll or (model.nonCSS.showSocial and model.nonCSS.showFBLike) then %>
+<% if model.nonCSS.showDownloadAll then %>
 		<div id="popupOverlay"><div class="popup"><h2></h2><div class="close icon ic-times-bl"></div>
 			<div class="popupContent" ></div>
 		</div></div>
@@ -75,32 +75,11 @@ fallback.ready(function() {
 	var c = '<%= model.nonCSS.socialColor %>';
 <% if model.nonCSS.showSocial then %>
 	/** Add links to social media **/
-	<% if model.nonCSS.showFBLike then %>
-	addSocialLink('fbLike',"$model.nonCSS.text.FacebookLikeDesc",'#','ic-thumbs-up',c=='color'?'fb':c); //#3b5998
-	/*  FB like is a special case: this link opens an iframe with a like button (see http://jsfiddle.net/zyrm2qop/6/).
-		Another option is to just link to a facebook page and let them like it from there. */
-	function openFBLike() {
-		if (Downloading) return false;
-		var fbLikeUrl = "http://www.facebook.com/plugins/like.php?href=" + encodeURIComponent(currentUrl) + "&amp;layout=standard&amp;show_faces=true&amp;width=225&amp;action=like&amp;colorscheme=light&amp;";
-		$("#popupOverlay").css({visibility: "visible", opacity: 1, "z-index": "auto"});
-		$("#popupOverlay h2").html("<%=model.nonCSS.text.FacebookLikeDesc%>!");
-		$("#popupOverlay .popupContent").html("<iframe id='fb_iframe' src='" + fbLikeUrl + "' frameborder='no' style='margin-top:30px;height:35px;width:225px;'></iframe>");
-		setTimeout(function(){
-			try { if ($("#fb_iframe").contents().find("body").html() == "")
-					$("#popupOverlay .popupContent").html("<%= LOC "$$$/AgWPG/Templates/HTML/DefaultText/AdblockDetected=You may need to disable ad-blocking and retry." %>");
-			} catch(e) { /* arriving here means the iframe loaded (but it's cross-domain/cross-protocol) */ }
-		}, 3000);
-		return false;
-	}
-	$("#fbLike").on('click', openFBLike);
-	<% end %>
-	var fbShareUrl = "http://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(currentUrl) + "&t=" + encodeURIComponent("$model.metadata.siteTitle.value");
+	var fbShareUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(currentUrl) + "&t=" + encodeURIComponent("$model.metadata.siteTitle.value");
 	addSocialLink('fbShare',"$model.nonCSS.text.FacebookShareDesc",fbShareUrl,'ic-facebook',c=='color'?'fb':c); //#3b5998
-	var googlePlusShareUrl = "https://plus.google.com/share?url=" + encodeURIComponent(currentUrl);
-	addSocialLink('googlePlusShare',"$model.nonCSS.text.GooglePlusDesc",googlePlusShareUrl,'ic-googleplus',c=='color'?'gp':c); //#dd4b39
-	var twitterShareUrl = "http://twitter.com/share?text=Check%20out%20this%20image%20gallery&url="+ encodeURIComponent(currentUrl);
+	var twitterShareUrl = "https://twitter.com/intent/tweet?text=Check%20out%20this%20image%20gallery&url="+ encodeURIComponent(currentUrl);
 	addSocialLink('tweet',"$model.nonCSS.text.TwitterDesc",twitterShareUrl,'ic-twitter',c=='color'?'tw':c); //#55acee
-	var pinteristPinUrl = "http://pinterest.com/pin/create/button/?url=" + encodeURIComponent(currentUrl) + "&media=" + encodeURIComponent(featuredImgUrl) + "&title=" + encodeURIComponent("$model.metadata.siteTitle.value");
+	var pinteristPinUrl = "https://pinterest.com/pin/create/button/?url=" + encodeURIComponent(currentUrl) + "&media=" + encodeURIComponent(featuredImgUrl) + "&title=" + encodeURIComponent("$model.metadata.siteTitle.value");
 	addSocialLink('pinIt',"$model.nonCSS.text.PinterestDesc",pinteristPinUrl,'ic-pinterest',c=='color'?'pi':c); //#bd081c
 	var emailUrl = "mailto:?subject=Great%20image%20gallery&amp;body=Check%20out%20the%20image%20gallery%20at%20" + encodeURIComponent(currentUrl);
 	addSocialLink('email',"$model.nonCSS.text.EmailDesc",emailUrl,'ic-mail-square',c=='color'?'em':c); //#ffbb4d
