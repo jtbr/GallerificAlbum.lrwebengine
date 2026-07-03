@@ -69,6 +69,5 @@ Thanks for downloading the Gallerific Web Album Plugin for Adobe Lightroom! Hope
 
 * Even if you disable "Full size image" links, full size images will still be generated (this is a limitation of Lightroom), but at thumbnail size. You could delete them from the `im/fl/` folder after generation if you want.
 
-##### For more information and updates, please visit [the Gallerific home page](http://trialstravails.blogspot.com/2015/07/gallerific.html).
+#### For more information and updates, please visit [the Gallerific home page](http://trialstravails.blogspot.com/2015/07/gallerific.html).
 
-###### Generated with dillinger.io

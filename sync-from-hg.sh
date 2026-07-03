@@ -40,8 +40,9 @@ rsync -a --delete \
   --exclude='README.html' --exclude='readme.md' --exclude='license.txt' \
   --exclude='JustStrings*' \
   --exclude='res/deploy_images.sh' --exclude='res/deploy_panoramas.txt' \
-  --exclude='res/backgrounds/*.psd' --exclude='res/backgrounds/ornaments_texture1129/' --exclude='res/backgrounds/*.txt' \
+  --exclude='res/backgrounds/*.psd' --exclude='res/backgrounds/extra/' --exclude='res/backgrounds/*.txt' \
   --exclude='res/icons/rename.sh' --exclude='res/icons/00NOTE.txt' --exclude='res/icons/preview.html' \
+  --exclude='dev/' \
   --exclude='.DS_Store' --exclude='Thumbs.db' --exclude='*~' --exclude='.vscode/' \
   "$HG_PLUGIN/" "GallerificAlbum.lrwebengine/"
 
@@ -61,4 +62,5 @@ echo
 echo "Done. Synced plug-in hg $PLUGIN_ID, templates hg $TPL_ID."
 echo "Next: review 'git status', then e.g.:"
 echo "  git add -A && git commit -m \"Sync from hg (plugin $PLUGIN_ID, templates $TPL_ID)\""
-echo "  ./build-release.sh   # then attach GallerificAlbum.lrwebengine.zip to a GitHub Release"
+echo "  push to github, tagging with version number"
+echo "  ./build-release.sh   # then add version number and attach GallerificAlbum.lrwebengine.zip to a GitHub Release"

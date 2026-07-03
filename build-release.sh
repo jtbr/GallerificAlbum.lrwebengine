@@ -22,5 +22,11 @@ pandoc readme.md -f gfm -t html5 --template readme-template.html \
 OUT="GallerificLightroomWebAlbum.zip"
 rm -f "$OUT"
 zip -r "$OUT" GallerificAlbum.lrwebengine Gallerific-Templates README.html license.txt \
-  -x '*/.DS_Store' '*/Thumbs.db'
+  -x '*/.DS_Store' '*/Thumbs.db' \
+  'GallerificAlbum.lrwebengine/dev' \
+  'GallerificAlbum.lrwebengine/res/backgrounds/bw_*' \
+  'GallerificAlbum.lrwebengine/res/backgrounds/rough_*' \
+  'GallerificAlbum.lrwebengine/res/backgrounds/transparent_*' \
+  'GallerificAlbum.lrwebengine/res/backgrounds/*_@2X*' \
+  'GallerificAlbum.lrwebengine/res/backgrounds/index.html'
 echo "Built $OUT"

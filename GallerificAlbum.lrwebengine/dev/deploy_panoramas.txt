@@ -1,0 +1,6 @@
+# deploy panoramas (with larger than normal width)
+# Actually, there is now an export plugin for this in lightroom.
+# 1) export panoramas with 95 quality from lightroom, having SHORT edge at 1024 pixels
+# 2) run this script from the export directory, providing the remote directory for the full resolution images (ie, s3://jbgalleries/gallerific-peru/im/fl )
+find . -name "*.jpg" -exec sh -c "djpeg {} | cjpeg -quality 72 -outfile {}.tmp" \; -exec mv {}.tmp {} \;
+s3cmd put -v --acl-public -rr --add-header="Cache-Control":"public,max-age 86400" --guess-mime-type --signature-v2 *jpg $1
